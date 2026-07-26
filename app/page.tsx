@@ -4,16 +4,13 @@ import { useMemo, useState } from "react";
 import { categories, people, routes, sites, timeline, type Site } from "./data";
 
 const catClass: Record<string, string> = {
-  "传统教育基地": "gold",
-  "实践教育基地": "teal",
-  "文化教育基地": "violet",
-  "思想政治教育基地": "cyan",
-  "名人故居": "red",
-  "组织与机关": "blue",
-  "历史事件": "orange",
-  "民盟前史": "amber",
-  "英烈纪念": "crimson",
-  "高校延伸": "indigo",
+  "传统教育基地": "gold", "实践教育基地": "teal", "文化教育基地": "violet",
+  "思想政治教育基地": "cyan", "名人故居": "red", "组织与机关": "blue",
+  "历史事件": "orange", "民盟前史": "amber", "英烈纪念": "crimson", "高校延伸": "indigo",
+};
+
+const evidenceClass: Record<string, string> = {
+  "官方资料可核": "verified", "多源互证": "crosschecked", "线索待核": "pending",
 };
 
 function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }) {
@@ -21,12 +18,12 @@ function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }
     <button className="site-card" onClick={() => onOpen(site)}>
       <div className="card-top">
         <span className={`tag ${catClass[site.category]}`}>{site.category}</span>
-        <span className="year">{site.year}</span>
+        <span className={`evidence ${evidenceClass[site.evidence || "多源互证"]}`}>{site.evidence}</span>
       </div>
       <h3>{site.name}</h3>
       <p className="address">{site.district} · {site.address}</p>
       <p className="hook">{site.hook}</p>
-      <span className="read">展开讲解卡 <b>↗</b></span>
+      <span className="read">{site.chapters?.length || 2}节故事 · {site.sources?.length || 0}项来源 <b>↗</b></span>
     </button>
   );
 }
@@ -39,16 +36,17 @@ export default function Home() {
   const [showAll, setShowAll] = useState(false);
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
 
+  const bases = sites.filter((site) => site.category === "传统教育基地");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return sites.filter((site) => {
       if (category !== "全部" && site.category !== category) return false;
       if (!q) return true;
-      return [site.name, site.address, site.old, site.hook, site.story, site.anchor, ...site.people]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
+      return [
+        site.name, site.address, site.old, site.hook, site.story, site.anchor,
+        ...(site.people || []), ...(site.facts || []),
+        ...(site.chapters || []).flatMap((chapter) => [chapter.title, chapter.text]),
+      ].filter(Boolean).join(" ").toLowerCase().includes(q);
     });
   }, [category, query]);
 
@@ -57,18 +55,23 @@ export default function Home() {
   const districtCounts = [...new Set(sites.map((s) => s.district))]
     .map((district) => ({ district, count: sites.filter((s) => s.district === district).length }))
     .sort((a, b) => b.count - a.count);
+  const totalSources = new Set(sites.flatMap((site) => site.sources?.map((source) => source.url) || [])).size;
+
+  const openCategory = (value: string) => {
+    setCategory(value);
+    setShowAll(true);
+    document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <main>
       <nav className="nav">
-        <a className="brand" href="#top"><span>盟迹</span><em>讲解员备赛资料库</em></a>
+        <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
-          <a href="#stories">故事库</a>
-          <a href="#routes">现场线路</a>
-          <a href="#timeline">历史主线</a>
-          <a href="#people">人物</a>
+          <a href="#bases">16处基地</a><a href="#archive">51处点位</a>
+          <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#sources">研究说明</a>
         </div>
-        <a className="nav-cta" href="#stories">开始备赛</a>
+        <a className="nav-cta" href="#archive">检索史料</a>
       </nav>
 
       <header className="hero" id="top">
@@ -76,44 +79,73 @@ export default function Home() {
         <div className="hero-orbit orbit-a" aria-hidden="true" />
         <div className="hero-orbit orbit-b" aria-hidden="true" />
         <div className="hero-copy">
-          <p className="kicker"><i /> 第二届民盟传统教育基地讲解员比赛 · 上海</p>
-          <h1>上海民盟的历史，<br /><span>可以用地址讲完。</span></h1>
-          <p className="hero-lede">从一家饭店的顶楼，到一间205号病房，再到外滩银行大楼的404室。这里不是景点清单，而是讲解员可以直接取用、继续追问的<span>历史故事资料库</span>。</p>
+          <p className="kicker"><i /> 民盟上海市委宣传部 · 上海盟史资料工程</p>
+          <h1><span>51处历史现场，</span><br />16处传统教育阵地。</h1>
+          <p className="hero-lede">这里记录的不是一串景点，而是每一处地址里真实发生过的事：谁来到这里、面对什么压力、作出怎样的选择，又怎样改变了上海民盟的历史。</p>
           <div className="hero-actions">
-            <a className="primary-btn" href="#stories">从故事开始 <span>↓</span></a>
-            <a className="ghost-btn" href="#routes">查看四条线路</a>
+            <a className="primary-btn" href="#bases">先看16处基地 <span>↓</span></a>
+            <a className="ghost-btn" href="#archive">检索51处点位</a>
           </div>
         </div>
         <div className="hero-data">
-          <div className="hero-number"><b>51</b><span>处上海盟史研究点位</span></div>
+          <div className="hero-number"><b>51</b><span>处可检索的上海盟史点位</span></div>
           <div className="metric-grid">
-            <div><b>16</b><span>传统教育基地</span></div>
-            <div><b>12</b><span>核心人物</span></div>
+            <div><b>16</b><span>传统教育阵地</span></div>
+            <div><b>12</b><span>核心人物索引</span></div>
             <div><b>18</b><span>历史节点</span></div>
-            <div><b>4</b><span>现场线路</span></div>
+            <div><b>{totalSources}</b><span>类公开来源入口</span></div>
           </div>
-          <p className="scope-note"><strong>口径说明</strong>　“16处”为本库收录的传统教育基地；“51处”为包含故居、机关、事件、前史、英烈与高校延伸在内的完整研究点位。</p>
+          <p className="scope-note"><strong>资料口径</strong>　51处涵盖基地、故居、机关、事件、前史、英烈与高校延伸。第16处按项目台账收录，挂牌序列待2026年官方原文归档后最终确认，页面已单独标识。</p>
         </div>
       </header>
 
-      <section className="principle">
-        <div className="section-label">HOW TO USE</div>
-        <h2>一处点位，不只要“知道”，<br />更要能<span>讲出来。</span></h2>
-        <div className="principle-flow">
-          <article><b>01</b><h3>先抓一个选择</h3><p>谁在什么压力下，做了什么决定？故事从人的选择开始。</p></article>
-          <div className="flow-arrow">→</div>
-          <article><b>02</b><h3>再落一个细节</h3><p>一根手杖、205号病房、404办公室，让历史可见可记。</p></article>
-          <div className="flow-arrow">→</div>
-          <article><b>03</b><h3>最后提出追问</h3><p>这个故事怎样解释民盟的界别、传统与今天的使命？</p></article>
+      <section className="base-archive" id="bases">
+        <div className="section-head">
+          <div>
+            <div className="section-label">TRADITIONAL EDUCATION SITES · 16</div>
+            <h2>先从16处基地，<br />进入上海民盟史。</h2>
+            <p>每处基地都不是一块孤立的牌子。这里把挂牌沿革、人物选择、关键事件、现场细节和公开来源合在一起，形成可继续扩展的专题档案。</p>
+          </div>
+          <div className="evidence-key">
+            <span><i className="verified" />官方资料可核</span>
+            <span><i className="crosschecked" />多源互证</span>
+            <span><i className="pending" />线索待核</span>
+          </div>
+        </div>
+        <div className="base-list">
+          {bases.map((site, index) => (
+            <button key={site.id} onClick={() => setSelected(site)}>
+              <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
+              <div><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
+              <em className={evidenceClass[site.evidence || "多源互证"]}>{site.evidence}</em>
+              <b>打开专题档案 ↗</b>
+            </button>
+          ))}
         </div>
       </section>
 
-      <section className="stories" id="stories">
+      <section className="featured-stories">
+        <div className="section-label light">STORIES AT THE ADDRESS</div>
+        <h2>一个门牌，为什么值得记住？</h2>
+        <div className="feature-grid">
+          {["nanhai", "hongqiao", "zhougongguan", "pudong-school"].map((id, i) => {
+            const site = sites.find((item) => item.id === id)!;
+            return (
+              <button key={id} onClick={() => setSelected(site)}>
+                <span>0{i + 1}</span><small>{site.address}</small>
+                <h3>{site.hook}</h3><p>{site.chapters?.[0]?.text}</p><em>阅读完整故事 ↗</em>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="stories" id="archive">
         <div className="section-head">
           <div>
-            <div className="section-label">STORY ARCHIVE · 51</div>
-            <h2>从故事进入历史</h2>
-            <p>每张卡片都给你一句开场、完整故事和讲解锚点。搜索地址、人名或关键词，快速组合自己的讲稿。</p>
+            <div className="section-label">HISTORY ARCHIVE · 51</div>
+            <h2>五十一处历史现场</h2>
+            <p>搜索地址、人名、事件或一句原话。每项档案包含故事章节、关键事实、相关人物、研究提示和可追溯的公开来源。</p>
           </div>
           <div className="address-toggle" aria-label="地址显示方式">
             <span>门牌</span>
@@ -121,11 +153,10 @@ export default function Home() {
             <button className={addressMode === "old" ? "active" : ""} onClick={() => setAddressMode("old")}>旧址</button>
           </div>
         </div>
-
         <div className="search-row">
           <label className="search-box">
             <span>⌕</span>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索点位、人物、地址或一句话…" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索点位、人物、地址、事件或引文…" />
             {query && <button onClick={() => setQuery("")} aria-label="清空搜索">×</button>}
           </label>
           <div className="result-count"><b>{filtered.length}</b> 个结果</div>
@@ -137,65 +168,20 @@ export default function Home() {
             </button>
           ))}
         </div>
-
         <div className="site-grid">
           {visible.map((site) => (
-            <SiteCard key={site.id} site={{...site, address: addressMode === "old" && site.old ? site.old : site.address}} onOpen={() => setSelected(site)} />
+            <SiteCard key={site.id} site={{ ...site, address: addressMode === "old" && site.old ? site.old : site.address }} onOpen={() => setSelected(site)} />
           ))}
         </div>
         {!filtered.length && <div className="empty-state"><b>没有找到对应点位</b><p>试试人物姓名、区名，或“教育”“英烈”“救国”等关键词。</p></div>}
-        {!showAll && !query && category === "全部" && (
-          <button className="show-all" onClick={() => setShowAll(true)}>展开全部51处点位 <span>↓</span></button>
-        )}
-      </section>
-
-      <section className="routes" id="routes">
-        <div className="route-intro">
-          <div className="section-label light">FIELD ROUTES · 04</div>
-          <h2>把故事带回现场</h2>
-          <p>四条线路按空间与主题编排。不是赶景点，而是用相邻地址建立一条能讲清楚的历史因果链。</p>
-          <div className="route-tabs">
-            {routes.map((item, i) => <button key={item.name} className={route === i ? "active" : ""} onClick={() => setRoute(i)}><b>0{i + 1}</b>{item.name}</button>)}
-          </div>
-          <div className="route-meta"><span>{routes[route].name}</span><b>{routes[route].meta}</b></div>
-        </div>
-        <div className="route-map">
-          <div className="map-grid" aria-hidden="true" />
-          <div className="route-line" aria-hidden="true" />
-          {routeSites.map((site, i) => (
-            <button key={site.id} className="route-stop" style={{ left: `${14 + (i % 4) * 24}%`, top: `${18 + Math.floor(i / 4) * 48 + (i % 2) * 8}%` }} onClick={() => setSelected(site)}>
-              <i>{i + 1}</i><span>{site.name}</span><small>{site.district}</small>
-            </button>
-          ))}
-          <p className="map-note">主题线路示意 · 点击站点打开讲解卡 · 实际出行请使用导航软件</p>
-        </div>
-      </section>
-
-      <section className="districts">
-        <div className="section-head compact">
-          <div>
-            <div className="section-label">CITY INDEX</div>
-            <h2>地址变了，是因为城市变了</h2>
-            <p>51处点位分布于上海13个区。门牌沿革不是附属信息，它记录组织活动如何借用饭店、医院、学校、里弄与办公楼。</p>
-          </div>
-        </div>
-        <div className="district-bars">
-          {districtCounts.map((item, i) => (
-            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(item.district); document.getElementById("stories")?.scrollIntoView({ behavior: "smooth" }); }}>
-              <span>{String(i + 1).padStart(2,"0")}</span>
-              <b>{item.district}</b>
-              <i style={{ width: `${Math.max(20, item.count * 9)}%` }} />
-              <em>{item.count}</em>
-            </button>
-          ))}
-        </div>
+        {!showAll && !query && category === "全部" && <button className="show-all" onClick={() => setShowAll(true)}>展开全部51处点位 <span>↓</span></button>}
       </section>
 
       <section className="timeline-section" id="timeline">
         <div className="timeline-copy">
           <div className="section-label light">CHRONICLE · 1935—TODAY</div>
-          <h2>先看主线，<br />再看门牌。</h2>
-          <p>点位不是散落的掌故。它们共同回答：一个以知识分子为主体的政治组织，怎样从抗日救亡走向明确政治选择，并在今天继续履职。</p>
+          <h2>点位不是掌故，<br />它们共同构成历史。</h2>
+          <p>从抗日救亡组织汇流，到民盟上海地方组织成立、明确政治选择、迎接上海解放，再到新中国成立后的制度化履职。</p>
         </div>
         <div className="timeline">
           {timeline.map(([year, title, text], i) => (
@@ -208,60 +194,106 @@ export default function Home() {
         <div className="section-head compact">
           <div>
             <div className="section-label">FIGURES · 12</div>
-            <h2>记住人，也记住他们的选择</h2>
-            <p>比赛不是人物履历背诵。用一句能被记住的话进入人物，再沿相关点位拓展。</p>
+            <h2>人物不是履历，<br />而是一连串选择。</h2>
+            <p>点击人物，检索他或她在上海留下的全部相关地址，再沿点位阅读其组织、职业和公共生活。</p>
           </div>
         </div>
         <div className="people-grid">
           {people.map(([name, years, role, quote], i) => (
-            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setShowAll(true); document.getElementById("stories")?.scrollIntoView({ behavior: "smooth" }); }}>
+            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" }); }}>
               <span className="person-no">{String(i + 1).padStart(2, "0")}</span>
-              <div className="person-monogram">{name.replace(" ","").slice(-1)}</div>
-              <h3>{name}</h3><small>{years}</small><p>{role}</p><blockquote>{quote}</blockquote>
-              <em>查看相关点位 ↗</em>
+              <div className="person-monogram">{name.replace(" ", "").slice(-1)}</div>
+              <h3>{name}</h3><small>{years}</small><p>{role}</p><blockquote>{quote}</blockquote><em>查看相关点位 ↗</em>
             </button>
           ))}
         </div>
       </section>
 
-      <section className="method">
-        <div className="method-title">
-          <div className="section-label light">FOR THE CONTEST</div>
-          <h2>把资料变成<br />你自己的讲解。</h2>
+      <section className="routes" id="routes">
+        <div className="route-intro">
+          <div className="section-label light">FIELD RESEARCH ROUTES · 04</div>
+          <h2>把档案带回现场</h2>
+          <p>线路是研究索引，不是打卡清单。相邻地址被组织成一条历史因果链，便于实地复核建筑、门牌和空间关系。</p>
+          <div className="route-tabs">
+            {routes.map((item, i) => <button key={item.name} className={route === i ? "active" : ""} onClick={() => setRoute(i)}><b>0{i + 1}</b>{item.name}</button>)}
+          </div>
+          <div className="route-meta"><span>{routes[route].name}</span><b>{routes[route].meta}</b></div>
         </div>
+        <div className="route-map">
+          <div className="map-grid" aria-hidden="true" /><div className="route-line" aria-hidden="true" />
+          {routeSites.map((site, i) => (
+            <button key={site.id} className="route-stop" style={{ left: `${14 + (i % 4) * 24}%`, top: `${18 + Math.floor(i / 4) * 48 + (i % 2) * 8}%` }} onClick={() => setSelected(site)}>
+              <i>{i + 1}</i><span>{site.name}</span><small>{site.district}</small>
+            </button>
+          ))}
+          <p className="map-note">主题线路示意 · 点击站点打开专题档案 · 实际出行请使用导航软件</p>
+        </div>
+      </section>
+
+      <section className="districts">
+        <div className="section-head compact"><div><div className="section-label">CITY INDEX</div><h2>地址变了，是因为城市变了</h2><p>门牌沿革记录组织活动如何借用饭店、医院、学校、里弄与办公楼。点击区名可直接筛选。</p></div></div>
+        <div className="district-bars">
+          {districtCounts.map((item, i) => (
+            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(item.district); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" }); }}>
+              <span>{String(i + 1).padStart(2, "0")}</span><b>{item.district}</b><i style={{ width: `${Math.max(20, item.count * 9)}%` }} /><em>{item.count}</em>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="research-note" id="sources">
+        <div>
+          <div className="section-label">RESEARCH METHOD</div>
+          <h2>真实，比“讲得像故事”更重要。</h2>
+        </div>
+        <div className="research-columns">
+          <article><b>01</b><h3>来源分层</h3><p>优先采用民盟中央、民盟上海市委及场馆、高校、政府公开资料；专题文章用于补充现场细节，并在档案内给出来源入口。</p></article>
+          <article><b>02</b><h3>事实与线索分开</h3><p>挂牌序列、具体会址、地址推定等尚未获得完整官方原文的内容，不以确定语气写入，统一标为“线索待核”。</p></article>
+          <article><b>03</b><h3>知识库持续生长</h3><p>当前版本先建立51处点位的档案骨架，并重点扩展16处基地。后续可继续补入原始文献、口述史、老照片说明和逐条引用。</p></article>
+        </div>
+        <button className="research-action" onClick={() => openCategory("传统教育基地")}>查看全部16处基地档案 ↗</button>
+      </section>
+
+      <section className="method">
+        <div className="method-title"><div className="section-label light">EXPLANATION REFERENCE</div><h2>需要讲解时，<br />再使用这一层。</h2></div>
         <div className="method-steps">
-          <article><span>第一步</span><h3>选一个冲突</h3><p>不是“某年某人来到这里”，而是“他本来可以离开，为什么留下”。</p></article>
-          <article><span>第二步</span><h3>抓一个物件</h3><p>手杖、被单、黑板、冬瓜、长须，都是把人物从展板上请下来的入口。</p></article>
-          <article><span>第三步</span><h3>连一条主线</h3><p>把个人选择放回救亡、民主、合作、建设的历史进程中。</p></article>
-          <article><span>第四步</span><h3>留一个问题</h3><p>讲解不是给出所有答案，而是让听众愿意继续认识民盟。</p></article>
+          <article><span>第一步</span><h3>先核事实</h3><p>确定时间、地点、人物和来源，不把传闻当史实。</p></article>
+          <article><span>第二步</span><h3>再抓选择</h3><p>谁在什么压力下作出什么决定，构成故事的核心。</p></article>
+          <article><span>第三步</span><h3>落到细节</h3><p>手杖、病房、清单、黑板，让历史可见、可记。</p></article>
+          <article><span>第四步</span><h3>回到主线</h3><p>个人故事最终要回到救亡、民主、合作与建设。</p></article>
         </div>
       </section>
 
       <footer>
-        <div className="footer-brand"><b>盟迹</b><span>上海民盟历史点位 · 讲解员备赛资料库</span></div>
-        <div className="footer-copy">民盟上海市委宣传部编<br />资料来源：民盟中央与民盟上海市委公开资料、《上海盟讯》、上海统一战线网、各区政府、高校及馆方公开资料。</div>
-        <div className="footer-note">史料提示：本库用于学习与讲解准备；挂牌序列、开放时间、人物职务和具体会址在正式使用前仍应以最新官方资料复核。</div>
+        <div className="footer-brand"><b>盟迹</b><span>上海民盟历史知识库</span></div>
+        <div className="footer-copy">民盟上海市委宣传部编<br />资料来源：民盟中央、民盟上海市委、《上海盟讯》、上海统一战线网、各区政府、高校及馆方公开资料。</div>
+        <div className="footer-note">研究提示：开放时间、挂牌序列、人物职务与具体会址会随新资料更新；档案内的核验状态和来源入口是正式引用前的第一道检查。</div>
       </footer>
 
       {selected && (
         <div className="drawer-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setSelected(null)}>
-          <aside className="drawer" role="dialog" aria-modal="true" aria-label={`${selected.name}讲解卡`}>
+          <aside className="drawer" role="dialog" aria-modal="true" aria-label={`${selected.name}专题档案`}>
             <button className="drawer-close" onClick={() => setSelected(null)} aria-label="关闭">×</button>
             <div className="drawer-hero">
-              <span className={`tag ${catClass[selected.category]}`}>{selected.category}</span>
-              <small>{selected.year}</small>
-              <h2>{selected.name}</h2>
-              <p>{selected.hook}</p>
+              <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span><span className={`evidence ${evidenceClass[selected.evidence || "多源互证"]}`}>{selected.evidence}</span></div>
+              <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
             </div>
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
             </div>
             <div className="drawer-body">
-              <section><label>故事正文</label><p>{selected.story}</p></section>
-              <section className="anchor-box"><label>讲解锚点</label><p>{selected.anchor}</p></section>
+              {selected.statusNote && <section className="status-note"><label>口径说明</label><p>{selected.statusNote}</p></section>}
+              {!!selected.facts?.length && <section><label>关键事实</label><div className="fact-grid">{selected.facts.map((fact) => <span key={fact}>{fact}</span>)}</div></section>}
+              <section className="story-chapters">
+                <label>完整故事</label>
+                {selected.chapters?.map((chapter, index) => <article key={chapter.title}><small>{String(index + 1).padStart(2, "0")}</small><div><h3>{chapter.title}</h3><p>{chapter.text}</p></div></article>)}
+              </section>
               {!!selected.people.length && <section><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { setSelected(null); setQuery(p); setCategory("全部"); setShowAll(true); }}>{p}</button>)}</div></section>}
-              <section className="prompt-box"><label>继续追问</label><p>这个地点里最重要的“选择”是什么？它怎样连接民盟的历史传统与今天的责任？</p></section>
+              <section className="anchor-box"><label>研究与讲解提示</label><p>{selected.anchor}</p></section>
+              <section className="source-list"><label>公开来源</label>
+                {selected.sources?.map((source, index) => <a href={source.url} target="_blank" rel="noreferrer" key={`${source.url}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{source.title}</b><small>{source.publisher}</small></div><em>↗</em></a>)}
+              </section>
             </div>
           </aside>
         </div>
