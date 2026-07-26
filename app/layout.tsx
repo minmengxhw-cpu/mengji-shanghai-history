@@ -17,13 +17,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "盟迹 · 上海民盟历史点位",
       description,
       type: "website",
-      images: [{ url: `${origin}/og-knowledge.png`, width: 1731, height: 909, alt: "盟迹 · 上海民盟历史知识库" }],
+      images: [{ url: `${origin}/og.png`, width: 1731, height: 909, alt: "盟迹 · 51处上海民盟历史点位数字索引" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "盟迹 · 上海民盟历史点位",
       description,
-      images: [`${origin}/og-knowledge.png`],
+      images: [`${origin}/og.png`],
     },
   };
 }
