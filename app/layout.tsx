@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
+export function generateMetadata(): Metadata {
+  const origin = process.env.GITHUB_PAGES === "true"
+    ? "https://minmengxhw-cpu.github.io/mengji-shanghai-history"
+    : "https://mengji-shanghai-history.minmengxhw.chatgpt.site";
   const description = "收录51处上海民盟历史点位、16处传统教育基地及其人物、事件与完整故事的知识库。";
   return {
     metadataBase: new URL(origin),
