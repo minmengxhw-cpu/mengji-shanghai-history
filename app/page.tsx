@@ -55,9 +55,7 @@ export default function Home() {
   const [showAll, setShowAll] = useState(false);
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
-  const drawerIndexRef = useRef<HTMLElement>(null);
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
   const totalSites = sites.length;
@@ -110,31 +108,6 @@ export default function Home() {
     if (id) setSelected(sites.find((item) => item.id === id) || null);
   }, []);
 
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-    const onWheel = (event: WheelEvent) => {
-      if (!event.deltaY) return;
-      event.preventDefault();
-      window.scrollBy({ top: event.deltaY, behavior: "auto" });
-    };
-    nav.addEventListener("wheel", onWheel, { passive: false });
-    return () => nav.removeEventListener("wheel", onWheel);
-  }, []);
-
-  useEffect(() => {
-    const index = drawerIndexRef.current;
-    const drawer = drawerRef.current;
-    if (!isDrawerOpen || !index || !drawer) return;
-    const onWheel = (event: WheelEvent) => {
-      if (!event.deltaY) return;
-      event.preventDefault();
-      drawer.scrollBy({ top: event.deltaY, behavior: "auto" });
-    };
-    index.addEventListener("wheel", onWheel, { passive: false });
-    return () => index.removeEventListener("wheel", onWheel);
-  }, [isDrawerOpen]);
-
   const scrollDrawerTo = useCallback((id: string) => {
     const drawer = drawerRef.current;
     const target = drawer?.querySelector<HTMLElement>(`#${id}`);
@@ -173,7 +146,7 @@ export default function Home() {
   const maxDistrictCount = districtCounts[0]?.count || 1;
   return (
     <main>
-      <nav className="nav" ref={navRef}>
+      <nav className="nav">
         <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
           <a href="#bases">{bases.length}处基地</a><a href="#archive">{totalSites}处点位</a>
@@ -369,7 +342,7 @@ export default function Home() {
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
             </div>
-            <nav className="drawer-index" aria-label="档案章节" ref={drawerIndexRef}>
+            <nav className="drawer-index" aria-label="档案章节">
               <button type="button" onClick={() => scrollDrawerTo("drawer-story")}>完整故事</button>
               {!!selected.architecture?.length && <button type="button" onClick={() => scrollDrawerTo("drawer-space")}>建筑空间</button>}
               {!!selected.people.length && <button type="button" onClick={() => scrollDrawerTo("drawer-people")}>相关人物</button>}
