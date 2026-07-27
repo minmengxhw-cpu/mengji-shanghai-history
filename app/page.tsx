@@ -56,7 +56,6 @@ export default function Home() {
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
-  const pageScrollRef = useRef(0);
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
   const totalSites = sites.length;
@@ -80,15 +79,13 @@ export default function Home() {
       document.body.classList.remove("drawer-open");
       return;
     }
-    pageScrollRef.current = window.scrollY;
     const body = document.body;
     const root = document.documentElement;
-    body.style.position = "fixed";
-    body.style.top = `-${pageScrollRef.current}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
-    document.body.classList.add("drawer-open");
+    const previousBodyOverflow = body.style.overflow;
+    const previousRootOverflow = root.style.overflow;
+    body.classList.add("drawer-open");
+    body.style.overflow = "hidden";
+    root.style.overflow = "hidden";
     window.setTimeout(() => closeButtonRef.current?.focus(), 40);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeSite();
@@ -96,15 +93,8 @@ export default function Home() {
     window.addEventListener("keydown", onKeyDown);
     return () => {
       body.classList.remove("drawer-open");
-      body.style.position = "";
-      body.style.top = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.width = "";
-      const previousScrollBehavior = root.style.scrollBehavior;
-      root.style.scrollBehavior = "auto";
-      window.scrollTo(0, pageScrollRef.current);
-      root.style.scrollBehavior = previousScrollBehavior;
+      body.style.overflow = previousBodyOverflow;
+      root.style.overflow = previousRootOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [closeSite, isDrawerOpen]);
