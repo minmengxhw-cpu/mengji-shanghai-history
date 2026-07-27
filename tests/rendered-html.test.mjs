@@ -25,7 +25,11 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   assert.match(html, /<title>盟迹 · 上海民盟历史知识库<\/title>/i);
   assert.match(html, /51处历史现场/);
   assert.match(html, /16处传统教育阵地/);
+  assert.match(html, /民盟是从爱国两个字上长出来的/);
+  assert.match(html, /五处地址，/);
+  assert.match(html, /南海花园饭店/);
   assert.match(html, /完整故事/);
+  assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
 });
 
@@ -40,6 +44,10 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.match(data, /architecture\?: \{ title: string; text: string \}\[\]/);
   assert.match(data, /const architecture:/);
   assert.match(page, /architecture-notes/);
+  assert.match(data, /export const organizationHistory/);
+  assert.match(data, /secondaryCategories: site\.id === "nanhai"/);
+  assert.match(data, /supplementalStories/);
+  assert.match(page, /organization-history\.jpg/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
 });

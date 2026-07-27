@@ -1,13 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { categories, people, routes, sites, timeline, type Site } from "./data";
+import { categories, organizationHistory, people, routes, sites, timeline, type Site } from "./data";
 
 const catClass: Record<string, string> = {
   "传统教育基地": "gold", "实践教育基地": "teal", "文化教育基地": "violet",
   "思想政治教育基地": "cyan", "名人故居": "red", "组织与机关": "blue",
   "历史事件": "orange", "民盟前史": "amber", "英烈纪念": "crimson", "高校延伸": "indigo",
 };
+
+const matchesCategory = (site: Site, item: string) =>
+  site.category === item || site.secondaryCategories?.includes(item as Site["category"]);
 
 function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }) {
   return (
@@ -36,12 +39,13 @@ export default function Home() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return sites.filter((site) => {
-      if (category !== "全部" && site.category !== category) return false;
+      if (category !== "全部" && !matchesCategory(site, category)) return false;
       if (!q) return true;
       return [
         site.name, site.address, site.old, site.hook, site.story, site.anchor,
         ...(site.people || []), ...(site.facts || []),
         ...(site.chapters || []).flatMap((chapter) => [chapter.title, chapter.text]),
+        ...(site.architecture || []).flatMap((note) => [note.title, note.text]),
       ].filter(Boolean).join(" ").toLowerCase().includes(q);
     });
   }, [category, query]);
@@ -69,7 +73,7 @@ export default function Home() {
         <div className="hero-copy">
           <p className="kicker"><i /> 民盟上海市委宣传部 · 上海盟史资料工程</p>
           <h1><span>51处历史现场，</span><br />16处传统教育阵地。</h1>
-          <p className="hero-lede">这里记录的不是一串景点，而是每一处地址里真实发生过的事：谁来到这里、面对什么压力、作出怎样的选择，又怎样改变了上海民盟的历史。</p>
+          <p className="hero-lede">民盟是从爱国两个字上长出来的。</p>
           <div className="hero-actions">
             <a className="primary-btn" href="#bases">先看16处基地 <span>↓</span></a>
             <a className="ghost-btn" href="#archive">检索51处点位</a>
@@ -83,7 +87,7 @@ export default function Home() {
             <div><b>18</b><span>历史节点</span></div>
             <div><b>4</b><span>条现场主题线路</span></div>
           </div>
-          <p className="scope-note"><strong>从地址进入历史</strong>　51处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。每个门牌背后都有具体的人、压力、选择和后果。</p>
+          <p className="scope-note"><strong>从地址进入历史</strong>　51处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。</p>
         </div>
       </header>
 
@@ -107,16 +111,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="featured-stories">
-        <div className="section-label light">STORIES AT THE ADDRESS</div>
-        <h2>一个门牌，为什么值得记住？</h2>
-        <div className="feature-grid">
-          {["nanhai", "hongqiao", "zhougongguan", "pudong-school"].map((id, i) => {
-            const site = sites.find((item) => item.id === id)!;
+      <section className="organization-history" id="organization-history">
+        <div className="organization-visual">
+          <div className="section-label light">ORGANIZATION HISTORY · 05</div>
+          <h2>五处地址，<br />一条机关沿革。</h2>
+          <p>第一站是1946年的南海花园饭店。此后，上海民盟的机关地址随组织公开程度、工作方式和履职阶段而变化。</p>
+          <img src="/organization-history.jpg" alt="上海民盟机关沿革五处地址图" />
+        </div>
+        <div className="organization-list">
+          {organizationHistory.map((item, index) => {
+            const site = sites.find((entry) => entry.id === item.siteId)!;
             return (
-              <button key={id} onClick={() => setSelected(site)}>
-                <span>0{i + 1}</span><small>{site.address}</small>
-                <h3>{site.hook}</h3><p>{site.chapters?.[0]?.text}</p><em>阅读完整故事 ↗</em>
+              <button key={item.siteId} onClick={() => setSelected(site)}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <b>{item.year}</b>
+                <div><h3>{item.title}</h3><p>{item.address}</p><small>{item.note}</small></div>
+                <em>打开档案 ↗</em>
               </button>
             );
           })}
@@ -147,7 +157,7 @@ export default function Home() {
         <div className="filters">
           {["全部", ...categories].map((item) => (
             <button key={item} className={category === item ? "active" : ""} onClick={() => { setCategory(item); setShowAll(true); }}>
-              {item}{item !== "全部" && <sup>{sites.filter((s) => s.category === item).length}</sup>}
+              {item}{item !== "全部" && <sup>{sites.filter((s) => matchesCategory(s, item)).length}</sup>}
             </button>
           ))}
         </div>
@@ -230,7 +240,7 @@ export default function Home() {
           <article><span>人物</span><h3>同一个人留下多处地址</h3><p>黄炎培连接川沙故居、浦东中学、中华职业教育社和民盟创建。</p></article>
           <article><span>事件</span><h3>同一事件穿过整座城市</h3><p>李闻惨案从昆明传到周公馆、天蟾舞台、静安寺与上海报刊。</p></article>
           <article><span>组织</span><h3>机关沿革就是组织成长</h3><p>从饭店顶楼到民主党派大厦，门牌记录公开程度与履职方式的变化。</p></article>
-          <article><span>精神</span><h3>细节让选择变得可见</h3><p>205号病房、财产清单、反光黑板和剃去的长须，把历史还给具体的人。</p></article>
+          <article><span>精神</span><h3>细节让选择变得可见</h3><p>205号病房、财产清单、讲台与剃去的长须，把历史还给具体的人。</p></article>
         </div>
       </section>
 
@@ -248,7 +258,7 @@ export default function Home() {
               <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
               <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
             </div>
-            {selected.image && <figure className="drawer-photo"><img src={selected.image} alt={selected.imageAlt || selected.name} /><figcaption>真实场馆与历史现场照片</figcaption></figure>}
+            <figure className="drawer-photo"><img src="/organization-history.jpg" alt="上海民盟机关沿革五处地址图" /><figcaption>上海民盟机关沿革 · 五处地址</figcaption></figure>
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}

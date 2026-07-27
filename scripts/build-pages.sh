@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_dir="${1:-pages}"
+output_dir="${1:-static-site}"
 port="${PAGES_PORT:-4173}"
 server_log="${RUNNER_TEMP:-/tmp}/mengji-pages-server.log"
 
@@ -29,20 +29,20 @@ fi
 
 cp -R dist/client/assets "$output_dir/assets"
 cp -R dist/client/sites "$output_dir/sites"
-for asset in favicon.svg og.png og-knowledge.png file.svg globe.svg window.svg; do
+for asset in favicon.svg og.png og-knowledge.png organization-history.jpg file.svg globe.svg window.svg; do
   if [ -f "dist/client/$asset" ]; then cp "dist/client/$asset" "$output_dir/$asset"; fi
 done
 
 # GitHub Pages serves this project under /mengji-shanghai-history/.
 # Keep all browser-loaded assets relative so the same snapshot works there.
-sed -i.bak \
-  -e 's#https://mengji-shanghai-history.minmengxhw.chatgpt.site#https://minmengxhw-cpu.github.io/mengji-shanghai-history#g' \
-  -e 's#"/assets/#"./assets/#g' \
-  -e 's#"/sites/#"./sites/#g' \
-  -e 's#"/favicon#"./favicon#g' \
-  -e 's#"/og#"./og#g' \
-  -e 's#\\"/assets/#\\"./assets/#g' \
-  -e 's#css:/assets/#css:./assets/#g' \
-  "$output_dir/index.html"
-rm -f "$output_dir/index.html.bak"
+perl -pi -e '
+  s#https://mengji-shanghai-history\.minmengxhw\.chatgpt\.site#https://minmengxhw-cpu.github.io/mengji-shanghai-history#g;
+  s#"/assets/#"./assets/#g;
+  s#"/sites/#"./sites/#g;
+  s#"/favicon#"./favicon#g;
+  s#"/og#"./og#g;
+  s#"/organization-history#"./organization-history#g;
+  s#\\"/assets/#\\"./assets/#g;
+  s#css:/assets/#css:./assets/#g;
+' "$output_dir/index.html"
 cp "$output_dir/index.html" "$output_dir/404.html"
