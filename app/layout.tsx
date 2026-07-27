@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const description = "收录51处上海民盟历史点位、16处传统教育阵地及其人物、事件、故事与公开史料来源的知识库。";
+  const description = "收录51处上海民盟历史点位、16处传统教育基地及其人物、事件与完整故事的知识库。";
   return {
     metadataBase: new URL(origin),
     title: "盟迹 · 上海民盟历史知识库",

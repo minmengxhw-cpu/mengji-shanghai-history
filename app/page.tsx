@@ -9,21 +9,17 @@ const catClass: Record<string, string> = {
   "历史事件": "orange", "民盟前史": "amber", "英烈纪念": "crimson", "高校延伸": "indigo",
 };
 
-const evidenceClass: Record<string, string> = {
-  "官方资料可核": "verified", "多源互证": "crosschecked", "线索待核": "pending",
-};
-
 function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }) {
   return (
     <button className="site-card" onClick={() => onOpen(site)}>
       <div className="card-top">
         <span className={`tag ${catClass[site.category]}`}>{site.category}</span>
-        <span className={`evidence ${evidenceClass[site.evidence || "多源互证"]}`}>{site.evidence}</span>
+        <span className="year">{site.year}</span>
       </div>
       <h3>{site.name}</h3>
       <p className="address">{site.district} · {site.address}</p>
       <p className="hook">{site.hook}</p>
-      <span className="read">{site.chapters?.length || 2}节故事 · {site.sources?.length || 0}项来源 <b>↗</b></span>
+      <span className="read">{site.chapters?.length || 2}节故事 <b>↗</b></span>
     </button>
   );
 }
@@ -55,21 +51,13 @@ export default function Home() {
   const districtCounts = [...new Set(sites.map((s) => s.district))]
     .map((district) => ({ district, count: sites.filter((s) => s.district === district).length }))
     .sort((a, b) => b.count - a.count);
-  const totalSources = new Set(sites.flatMap((site) => site.sources?.map((source) => source.url) || [])).size;
-
-  const openCategory = (value: string) => {
-    setCategory(value);
-    setShowAll(true);
-    document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <main>
       <nav className="nav">
         <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
           <a href="#bases">16处基地</a><a href="#archive">51处点位</a>
-          <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#sources">研究说明</a>
+          <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#routes">现场线路</a>
         </div>
         <a className="nav-cta" href="#archive">检索史料</a>
       </nav>
@@ -93,9 +81,9 @@ export default function Home() {
             <div><b>16</b><span>传统教育阵地</span></div>
             <div><b>12</b><span>核心人物索引</span></div>
             <div><b>18</b><span>历史节点</span></div>
-            <div><b>{totalSources}</b><span>类公开来源入口</span></div>
+            <div><b>4</b><span>条现场主题线路</span></div>
           </div>
-          <p className="scope-note"><strong>资料口径</strong>　51处涵盖基地、故居、机关、事件、前史、英烈与高校延伸。第16处按项目台账收录，挂牌序列待2026年官方原文归档后最终确认，页面已单独标识。</p>
+          <p className="scope-note"><strong>从地址进入历史</strong>　51处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。每个门牌背后都有具体的人、压力、选择和后果。</p>
         </div>
       </header>
 
@@ -104,21 +92,16 @@ export default function Home() {
           <div>
             <div className="section-label">TRADITIONAL EDUCATION SITES · 16</div>
             <h2>先从16处基地，<br />进入上海民盟史。</h2>
-            <p>每处基地都不是一块孤立的牌子。这里把挂牌沿革、人物选择、关键事件、现场细节和公开来源合在一起，形成可继续扩展的专题档案。</p>
-          </div>
-          <div className="evidence-key">
-            <span><i className="verified" />官方资料可核</span>
-            <span><i className="crosschecked" />多源互证</span>
-            <span><i className="pending" />线索待核</span>
+            <p>每处基地都不是一块孤立的牌子。这里保存完整的前因后果、人物关系、关键原话和现场细节，让一处地址可以展开成一段真正可讲述的上海民盟史。</p>
           </div>
         </div>
         <div className="base-list">
           {bases.map((site, index) => (
             <button key={site.id} onClick={() => setSelected(site)}>
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
-              <div><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
-              <em className={evidenceClass[site.evidence || "多源互证"]}>{site.evidence}</em>
-              <b>打开专题档案 ↗</b>
+              <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
+              {site.image && <img src={site.image} alt={site.imageAlt || site.name} loading="lazy" />}
+              <b>打开完整故事 ↗</b>
             </button>
           ))}
         </div>
@@ -145,7 +128,7 @@ export default function Home() {
           <div>
             <div className="section-label">HISTORY ARCHIVE · 51</div>
             <h2>五十一处历史现场</h2>
-            <p>搜索地址、人名、事件或一句原话。每项档案包含故事章节、关键事实、相关人物、研究提示和可追溯的公开来源。</p>
+            <p>搜索地址、人名、事件或一句原话。每项档案包含故事章节、关键事实、相关人物和与其他点位之间的联系。</p>
           </div>
           <div className="address-toggle" aria-label="地址显示方式">
             <span>门牌</span>
@@ -241,34 +224,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="research-note" id="sources">
-        <div>
-          <div className="section-label">RESEARCH METHOD</div>
-          <h2>真实，比“讲得像故事”更重要。</h2>
-        </div>
-        <div className="research-columns">
-          <article><b>01</b><h3>来源分层</h3><p>优先采用民盟中央、民盟上海市委及场馆、高校、政府公开资料；专题文章用于补充现场细节，并在档案内给出来源入口。</p></article>
-          <article><b>02</b><h3>事实与线索分开</h3><p>挂牌序列、具体会址、地址推定等尚未获得完整官方原文的内容，不以确定语气写入，统一标为“线索待核”。</p></article>
-          <article><b>03</b><h3>图片必须真实</h3><p>不使用生成式建筑、人物或“示意旧照”代替历史资料。照片只有在地点、人物、年代与来源均可说明时才进入知识库；否则使用纯数字和地址信息图。</p></article>
-          <article><b>04</b><h3>知识库持续生长</h3><p>当前版本先建立51处点位的档案骨架，并重点扩展16处基地。后续可继续补入原始文献、口述史、老照片说明和逐条引用。</p></article>
-        </div>
-        <button className="research-action" onClick={() => openCategory("传统教育基地")}>查看全部16处基地档案 ↗</button>
-      </section>
-
       <section className="method">
-        <div className="method-title"><div className="section-label light">EXPLANATION REFERENCE</div><h2>需要讲解时，<br />再使用这一层。</h2></div>
+        <div className="method-title"><div className="section-label light">KNOWLEDGE CONNECTION</div><h2>一处地址，<br />可以通向整部盟史。</h2></div>
         <div className="method-steps">
-          <article><span>第一步</span><h3>先核事实</h3><p>确定时间、地点、人物和来源，不把传闻当史实。</p></article>
-          <article><span>第二步</span><h3>再抓选择</h3><p>谁在什么压力下作出什么决定，构成故事的核心。</p></article>
-          <article><span>第三步</span><h3>落到细节</h3><p>手杖、病房、清单、黑板，让历史可见、可记。</p></article>
-          <article><span>第四步</span><h3>回到主线</h3><p>个人故事最终要回到救亡、民主、合作与建设。</p></article>
+          <article><span>人物</span><h3>同一个人留下多处地址</h3><p>黄炎培连接川沙故居、浦东中学、中华职业教育社和民盟创建。</p></article>
+          <article><span>事件</span><h3>同一事件穿过整座城市</h3><p>李闻惨案从昆明传到周公馆、天蟾舞台、静安寺与上海报刊。</p></article>
+          <article><span>组织</span><h3>机关沿革就是组织成长</h3><p>从饭店顶楼到民主党派大厦，门牌记录公开程度与履职方式的变化。</p></article>
+          <article><span>精神</span><h3>细节让选择变得可见</h3><p>205号病房、财产清单、反光黑板和剃去的长须，把历史还给具体的人。</p></article>
         </div>
       </section>
 
       <footer>
         <div className="footer-brand"><b>盟迹</b><span>上海民盟历史知识库</span></div>
-        <div className="footer-copy">民盟上海市委宣传部编<br />资料来源：民盟中央、民盟上海市委、《上海盟讯》、上海统一战线网、各区政府、高校及馆方公开资料。</div>
-        <div className="footer-note">研究提示：开放时间、挂牌序列、人物职务与具体会址会随新资料更新；档案内的核验状态和来源入口是正式引用前的第一道检查。</div>
+        <div className="footer-copy">民盟上海市委宣传部编<br />上海民盟历史点位、人物与故事资料库</div>
+        <div className="footer-note">从一处地址进入一个人物，再从一个人物进入一段历史。知识库将持续补充史料、照片、口述与现场细节。</div>
       </footer>
 
       {selected && (
@@ -276,25 +245,22 @@ export default function Home() {
           <aside className="drawer" role="dialog" aria-modal="true" aria-label={`${selected.name}专题档案`}>
             <button className="drawer-close" onClick={() => setSelected(null)} aria-label="关闭">×</button>
             <div className="drawer-hero">
-              <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span><span className={`evidence ${evidenceClass[selected.evidence || "多源互证"]}`}>{selected.evidence}</span></div>
+              <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
               <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
             </div>
+            {selected.image && <figure className="drawer-photo"><img src={selected.image} alt={selected.imageAlt || selected.name} /><figcaption>真实场馆与历史现场照片</figcaption></figure>}
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
             </div>
             <div className="drawer-body">
-              {selected.statusNote && <section className="status-note"><label>口径说明</label><p>{selected.statusNote}</p></section>}
               {!!selected.facts?.length && <section><label>关键事实</label><div className="fact-grid">{selected.facts.map((fact) => <span key={fact}>{fact}</span>)}</div></section>}
               <section className="story-chapters">
                 <label>完整故事</label>
                 {selected.chapters?.map((chapter, index) => <article key={chapter.title}><small>{String(index + 1).padStart(2, "0")}</small><div><h3>{chapter.title}</h3><p>{chapter.text}</p></div></article>)}
               </section>
               {!!selected.people.length && <section><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { setSelected(null); setQuery(p); setCategory("全部"); setShowAll(true); }}>{p}</button>)}</div></section>}
-              <section className="anchor-box"><label>研究与讲解提示</label><p>{selected.anchor}</p></section>
-              <section className="source-list"><label>公开来源</label>
-                {selected.sources?.map((source, index) => <a href={source.url} target="_blank" rel="noreferrer" key={`${source.url}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{source.title}</b><small>{source.publisher}</small></div><em>↗</em></a>)}
-              </section>
+              <section className="anchor-box"><label>故事线索</label><p>{selected.anchor}</p></section>
             </div>
           </aside>
         </div>
