@@ -71,6 +71,7 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(page, /assetSrc\(selected\.image\)/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
+  assert.match(script, /dist\/client\/sites-optimized/);
 });
 
 test("keeps all 67 site dossiers substantial", async () => {

@@ -29,6 +29,7 @@ fi
 
 cp -R dist/client/assets "$output_dir/assets"
 cp -R dist/client/sites "$output_dir/sites"
+cp -R dist/client/sites-optimized "$output_dir/sites-optimized"
 for asset in favicon.svg og.png og-knowledge.png organization-history.jpg file.svg globe.svg window.svg; do
   if [ -f "dist/client/$asset" ]; then cp "dist/client/$asset" "$output_dir/$asset"; fi
 done
@@ -39,10 +40,12 @@ perl -pi -e '
   s#https://mengji-shanghai-history\.minmengxhw\.chatgpt\.site#https://minmengxhw-cpu.github.io/mengji-shanghai-history#g;
   s#"/assets/#"./assets/#g;
   s#"/sites/#"./sites/#g;
+  s#"/sites-optimized/#"./sites-optimized/#g;
   s#"/favicon#"./favicon#g;
   s#"/og#"./og#g;
   s#"/organization-history#"./organization-history#g;
   s#\\"/assets/#\\"./assets/#g;
+  s#\\"/sites-optimized/#\\"./sites-optimized/#g;
   s#css:/assets/#css:./assets/#g;
 ' "$output_dir/index.html"
 cp "$output_dir/index.html" "$output_dir/404.html"
