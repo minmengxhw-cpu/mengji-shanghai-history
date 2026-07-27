@@ -41,9 +41,12 @@ export default function Home() {
   const [showAll, setShowAll] = useState(false);
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+  const pageScrollRef = useRef(0);
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
   const totalSites = sites.length;
+  const isDrawerOpen = Boolean(selected);
   const totalPeople = new Set(sites.flatMap((site) => site.people).filter((name) => name && !name.includes("机关"))).size;
   const openSite = useCallback((site: Site) => {
     setSelected(site);
@@ -55,14 +58,22 @@ export default function Home() {
     setSelected(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("site");
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, []);
 
   useEffect(() => {
-    if (!selected) {
+    if (!isDrawerOpen) {
       document.body.classList.remove("drawer-open");
       return;
     }
+    pageScrollRef.current = window.scrollY;
+    const body = document.body;
+    const root = document.documentElement;
+    body.style.position = "fixed";
+    body.style.top = `-${pageScrollRef.current}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     document.body.classList.add("drawer-open");
     window.setTimeout(() => closeButtonRef.current?.focus(), 40);
     const onKeyDown = (event: KeyboardEvent) => {
@@ -70,10 +81,26 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.classList.remove("drawer-open");
+      body.classList.remove("drawer-open");
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.width = "";
+      const previousScrollBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, pageScrollRef.current);
+      root.style.scrollBehavior = previousScrollBehavior;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [closeSite, selected]);
+  }, [closeSite, isDrawerOpen]);
+
+  const scrollDrawerTo = useCallback((id: string) => {
+    const drawer = drawerRef.current;
+    const target = drawer?.querySelector<HTMLElement>(`#${id}`);
+    if (!drawer || !target) return;
+    drawer.scrollTo({ top: Math.max(0, target.offsetTop - 58), behavior: "smooth" });
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -130,7 +157,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-data">
-          <div className="hero-number"><b>{totalSites}</b><span>处可检索的上海盟史点位</span></div>
+          <div className="hero-number"><b>{totalSites}</b><span>处可检索的<br /><em>上海盟史点位</em></span></div>
           <div className="metric-grid">
             <div><b>16</b><span>传统教育基地</span></div>
             <div><b>{totalPeople}</b><span>位相关人物索引</span></div>
@@ -282,7 +309,7 @@ export default function Home() {
 
       {selected && (
         <div className="drawer-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && closeSite()}>
-          <aside className="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+          <aside ref={drawerRef} className="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
             <button ref={closeButtonRef} className="drawer-close" onClick={closeSite} aria-label="关闭">×</button>
             <div className="drawer-hero">
               <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
@@ -293,9 +320,9 @@ export default function Home() {
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
             </div>
             <nav className="drawer-index" aria-label="档案章节">
-              <a href="#drawer-story">完整故事</a>
-              {!!selected.architecture?.length && <a href="#drawer-space">建筑空间</a>}
-              {!!selected.people.length && <a href="#drawer-people">相关人物</a>}
+              <button type="button" onClick={() => scrollDrawerTo("drawer-story")}>完整故事</button>
+              {!!selected.architecture?.length && <button type="button" onClick={() => scrollDrawerTo("drawer-space")}>建筑空间</button>}
+              {!!selected.people.length && <button type="button" onClick={() => scrollDrawerTo("drawer-people")}>相关人物</button>}
               <span>{selected.chapters?.reduce((sum, item) => sum + item.text.length, 0) || 0}字故事正文</span>
             </nav>
             <div className="drawer-body">

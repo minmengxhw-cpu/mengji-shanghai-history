@@ -24,7 +24,7 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>盟迹 · 上海民盟历史知识库<\/title>/i);
-  assert.match(html, /67(?:<!-- -->)?处历史现场/);
+  assert.match(html, /66(?:<!-- -->)?处历史现场/);
   assert.match(html, /16处传统教育档案/);
   assert.match(html, /从16处传统教育基地/);
   assert.match(html, /民盟是从爱国两个字上长出来的/);
@@ -74,7 +74,7 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.match(script, /dist\/client\/sites-optimized/);
 });
 
-test("keeps all 67 site dossiers substantial", async () => {
+test("keeps all 66 site dossiers substantial and residence addresses unique", async () => {
   const source = await readFile(new URL("../app/data.ts", import.meta.url), "utf8");
   const compiled = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
@@ -82,7 +82,15 @@ test("keeps all 67 site dossiers substantial", async () => {
   const exports = {};
   new Function("exports", "module", compiled)(exports, { exports });
 
-  assert.equal(exports.sites.length, 67);
+  assert.equal(exports.sites.length, 66);
+  const residences = exports.sites.filter((site) =>
+    site.category === "名人故居" || site.secondaryCategories?.includes("名人故居"));
+  const normalizedAddresses = residences.map((site) =>
+    site.address.replace(/[，,。.\s]/g, "").replace(/（[^）]*）/g, ""));
+  assert.equal(new Set(normalizedAddresses).size, normalizedAddresses.length);
+  assert.equal(exports.sites.find((site) => site.id === "li-home")?.category, "名人故居");
+  assert.equal(exports.sites.find((site) => site.id === "yuyuan-749")?.name, "民盟上海市支部筹委会成立地");
+  assert.ok(!exports.sites.some((site) => site.id === "liwen-report"));
   for (const site of exports.sites) {
     assert.ok(site.chapters.length >= 6, `${site.id} should have at least 6 story chapters`);
     const storyLength = site.story.length
