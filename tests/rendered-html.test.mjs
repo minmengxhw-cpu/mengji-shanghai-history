@@ -80,7 +80,13 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(page, /drawer-photo/);
   assert.doesNotMatch(page, /assetSrc\(selected\.image\)/);
   assert.doesNotMatch(page, /behavior:\s*["']smooth["']/);
+  assert.doesNotMatch(page, /href=["']#/);
+  assert.doesNotMatch(page, /scrollIntoView/);
   assert.doesNotMatch(styles, /scroll-behavior:\s*smooth/);
+  assert.doesNotMatch(styles, /content-visibility:\s*auto/);
+  assert.match(styles, /overflow-anchor:none/);
+  assert.match(page, /const goToSection/);
+  assert.match(page, /window\.scrollTo\(0, top\)/);
   assert.doesNotMatch(styles, /\.nav\{[^}]*position:sticky/);
   assert.doesNotMatch(styles, /\.drawer-index\{[^}]*position:sticky/);
   assert.match(page, /className="base-entry"/);

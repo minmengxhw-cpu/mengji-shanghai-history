@@ -73,6 +73,18 @@ export default function Home() {
     url.searchParams.delete("site");
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, []);
+  const goToSection = useCallback((id: string) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    // Avoid native hash navigation on this long, dynamically rendered page.
+    document.body.classList.remove("drawer-open");
+    document.body.style.removeProperty("overflow");
+    document.documentElement.style.removeProperty("overflow");
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const top = target.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, top);
+  }, []);
 
   useEffect(() => {
     if (!isDrawerOpen) {
@@ -147,12 +159,15 @@ export default function Home() {
   return (
     <main>
       <nav className="nav">
-        <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
+        <button className="brand" type="button" onClick={() => goToSection("top")}><span>盟迹</span><em>上海民盟历史知识库</em></button>
         <div className="nav-links">
-          <a href="#bases">{bases.length}处基地</a><a href="#archive">{totalSites}处点位</a>
-          <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#routes">现场线路</a>
+          <button type="button" onClick={() => goToSection("bases")}>{bases.length}处基地</button>
+          <button type="button" onClick={() => goToSection("archive")}>{totalSites}处点位</button>
+          <button type="button" onClick={() => goToSection("timeline")}>历史主线</button>
+          <button type="button" onClick={() => goToSection("people")}>人物</button>
+          <button type="button" onClick={() => goToSection("routes")}>现场线路</button>
         </div>
-        <a className="nav-cta" href="#archive">检索史料</a>
+        <button className="nav-cta" type="button" onClick={() => goToSection("archive")}>检索史料</button>
       </nav>
 
       <header className="hero" id="top">
@@ -164,8 +179,8 @@ export default function Home() {
           <h1><span>{totalSites}处历史现场，</span><br />{bases.length}处传统教育档案。</h1>
           <p className="hero-lede">民盟是从爱国两个字上长出来的。</p>
           <div className="hero-actions">
-            <a className="primary-btn" href="#bases">先看{bases.length}处基地 <span>↓</span></a>
-            <a className="ghost-btn" href="#archive">检索{totalSites}处点位</a>
+            <button className="primary-btn" type="button" onClick={() => goToSection("bases")}>先看{bases.length}处基地 <span>↓</span></button>
+            <button className="ghost-btn" type="button" onClick={() => goToSection("archive")}>检索{totalSites}处点位</button>
           </div>
         </div>
         <div className="hero-data">
@@ -281,7 +296,7 @@ export default function Home() {
         </div>
         <div className="people-grid">
           {people.map(([name, years, role, quote], i) => (
-            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setDistrict("全部"); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "auto" }); }}>
+            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setDistrict("全部"); setShowAll(true); goToSection("archive"); }}>
               <span className="person-no">{String(i + 1).padStart(2, "0")}</span>
               <div className="person-monogram">{name.replace(/\s/g, "").slice(0, 1)}</div>
               <h3>{name}</h3><small>{years}</small><p>{role}</p><blockquote>{quote}</blockquote><em>查看相关点位 ↗</em>
@@ -320,7 +335,7 @@ export default function Home() {
         <div className="section-head compact"><div><div className="section-label">CITY INDEX</div><h2>地址变了，是因为城市变了</h2><p>门牌沿革记录组织活动如何借用饭店、医院、学校、里弄与办公楼。点击区名可直接筛选。</p></div></div>
         <div className="district-bars">
           {districtCounts.map((item, i) => (
-            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(""); setDistrict(item.district); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "auto" }); }}>
+            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(""); setDistrict(item.district); setShowAll(true); goToSection("archive"); }}>
               <span>{String(i + 1).padStart(2, "0")}</span><b>{item.district}</b><i style={{ width: `${Math.max(6, (item.count / maxDistrictCount) * 100)}%` }} /><em>{item.count}</em>
             </button>
           ))}
