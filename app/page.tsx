@@ -6,7 +6,7 @@ import { categories, people, routes, sites, timeline, type Site } from "./data";
 const catClass: Record<string, string> = {
   "传统教育基地": "gold", "实践教育基地": "teal", "文化教育基地": "violet",
   "思想政治教育基地": "cyan", "名人故居": "red", "组织与机关": "blue",
-  "历史事件": "orange", "民盟前史": "amber", "英烈纪念": "crimson", "高校延伸": "indigo",
+  "历史事件": "orange", "民盟前史": "amber", "英烈纪念": "crimson", "教育与校园": "indigo",
 };
 
 const matchesCategory = (site: Site, item: string) =>
@@ -110,7 +110,7 @@ export default function Home() {
       <nav className="nav">
         <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
-          <a href="#bases">15+1基地档案</a><a href="#archive">{totalSites}处点位</a>
+          <a href="#bases">16处基地</a><a href="#archive">{totalSites}处点位</a>
           <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#routes">现场线路</a>
         </div>
         <a className="nav-cta" href="#archive">检索史料</a>
@@ -125,19 +125,19 @@ export default function Home() {
           <h1><span>{totalSites}处历史现场，</span><br />16处传统教育档案。</h1>
           <p className="hero-lede">民盟是从爱国两个字上长出来的。</p>
           <div className="hero-actions">
-            <a className="primary-btn" href="#bases">先看15+1基地档案 <span>↓</span></a>
+            <a className="primary-btn" href="#bases">先看16处基地 <span>↓</span></a>
             <a className="ghost-btn" href="#archive">检索{totalSites}处点位</a>
           </div>
         </div>
         <div className="hero-data">
           <div className="hero-number"><b>{totalSites}</b><span>处可检索的上海盟史点位</span></div>
           <div className="metric-grid">
-            <div><b>15+1</b><span>已挂牌 · 建设中</span></div>
+            <div><b>16</b><span>传统教育基地</span></div>
             <div><b>{totalPeople}</b><span>位相关人物索引</span></div>
             <div><b>18</b><span>历史节点</span></div>
             <div><b>4</b><span>条现场主题线路</span></div>
           </div>
-          <p className="scope-note"><strong>从地址进入历史</strong>　{totalSites}处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。</p>
+          <p className="scope-note"><strong>从地址进入历史</strong>　{totalSites}处涵盖传统教育基地、人物纪念与旧居、机关沿革、事件现场、民盟前史、英烈纪念与教育校园。</p>
         </div>
       </header>
 
@@ -145,7 +145,7 @@ export default function Home() {
         <div className="section-head">
           <div>
             <div className="section-label">TRADITIONAL EDUCATION SITES · 16</div>
-            <h2>15处已挂牌，1处建设中，<br />从基地档案进入上海民盟史。</h2>
+            <h2>从16处传统教育基地，<br />进入上海民盟史。</h2>
             <p>每处基地都不是一块孤立的牌子。这里保存完整的前因后果、人物关系、关键原话和现场细节，让一处地址可以展开成一段真正可讲述的上海民盟史。</p>
           </div>
         </div>

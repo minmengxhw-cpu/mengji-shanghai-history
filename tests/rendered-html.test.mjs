@@ -26,11 +26,11 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   assert.match(html, /<title>盟迹 · 上海民盟历史知识库<\/title>/i);
   assert.match(html, /67(?:<!-- -->)?处历史现场/);
   assert.match(html, /16处传统教育档案/);
-  assert.match(html, /15处已挂牌，1处建设中/);
+  assert.match(html, /从16处传统教育基地/);
   assert.match(html, /民盟是从爱国两个字上长出来的/);
   assert.match(html, /南海花园饭店/);
   assert.match(html, /完整故事/);
-  assert.match(html, /15\+1基地档案/);
+  assert.match(html, /16处基地/);
   assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
   assert.doesNotMatch(html, /上海民盟机关沿革 · 五处地址|organization-history\.jpg/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
