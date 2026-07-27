@@ -1,0 +1,51 @@
+name: Deploy to CloudBase (国内固定域名)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudbase-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
+      TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
+      CLOUDBASE_ENV_ID: ${{ secrets.CLOUDBASE_ENV_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static snapshot
+        run: bash scripts/build-pages.sh static-site
+
+      # 仓库默认快照面向 GitHub Pages 子路径，含 github.io 绝对链接；
+      # 部署到 CloudBase 根目录需改写为相对路径，避免残留外链。
+      - name: Rewrite absolute URLs for root deployment
+        run: |
+          perl -pi -e 's#https://minmengxhw-cpu\.github\.io/mengji-shanghai-history/?#./#g;' static-site/*.html
+
+      - name: Install CloudBase CLI
+        run: npm install @cloudbase/cli
+
+      - name: Login CloudBase
+        run: npx tcb login --apiKeyId "$TENCENTCLOUD_SECRET_ID" --apiKey "$TENCENTCLOUD_SECRET_KEY"
+
+      - name: Deploy to CloudBase static hosting
+        run: npx tcb hosting deploy ./static-site -e "$CLOUDBASE_ENV_ID"
