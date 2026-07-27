@@ -48,8 +48,8 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.match(data, /secondaryCategories: site\.id === "nanhai"/);
   assert.match(data, /supplementalStories/);
   assert.match(page, /organization-history\.jpg/);
-  assert.match(page, /selected\.image/);
-  assert.match(page, /assetSrc\(selected\.image\)/);
+  assert.doesNotMatch(page, /drawer-photo/);
+  assert.doesNotMatch(page, /assetSrc\(selected\.image\)/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
 });

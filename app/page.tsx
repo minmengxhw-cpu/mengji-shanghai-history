@@ -260,10 +260,6 @@ export default function Home() {
               <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
               <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
             </div>
-            {selected.image && <figure className="drawer-photo">
-              <img src={assetSrc(selected.image)} alt={selected.imageAlt || selected.name} />
-              <figcaption>{selected.imageAlt || `${selected.name}实景`}</figcaption>
-            </figure>}
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
