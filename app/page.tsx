@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { categories, organizationHistory, people, routes, sites, timeline, type Site } from "./data";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { categories, people, routes, sites, timeline, type Site } from "./data";
 
 const catClass: Record<string, string> = {
   "传统教育基地": "gold", "实践教育基地": "teal", "文化教育基地": "violet",
@@ -32,25 +32,72 @@ function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }
 export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("全部");
-  const [selected, setSelected] = useState<Site | null>(null);
+  const [selected, setSelected] = useState<Site | null>(() => {
+    if (typeof window === "undefined") return null;
+    const id = new URL(window.location.href).searchParams.get("site");
+    return sites.find((item) => item.id === id) || null;
+  });
   const [route, setRoute] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
   const totalSites = sites.length;
+  const totalPeople = new Set(sites.flatMap((site) => site.people).filter((name) => name && !name.includes("机关"))).size;
+  const openSite = useCallback((site: Site) => {
+    setSelected(site);
+    const url = new URL(window.location.href);
+    url.searchParams.set("site", site.id);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+  const closeSite = useCallback(() => {
+    setSelected(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("site");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  useEffect(() => {
+    if (!selected) {
+      document.body.classList.remove("drawer-open");
+      return;
+    }
+    document.body.classList.add("drawer-open");
+    window.setTimeout(() => closeButtonRef.current?.focus(), 40);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeSite();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.classList.remove("drawer-open");
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeSite, selected]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return sites.filter((site) => {
-      if (category !== "全部" && !matchesCategory(site, category)) return false;
-      if (!q) return true;
-      return [
-        site.name, site.address, site.old, site.hook, site.story, site.anchor,
-        ...(site.people || []), ...(site.facts || []),
-        ...(site.chapters || []).flatMap((chapter) => [chapter.title, chapter.text]),
-        ...(site.architecture || []).flatMap((note) => [note.title, note.text]),
-      ].filter(Boolean).join(" ").toLowerCase().includes(q);
-    });
+    return sites
+      .filter((site) => category === "全部" || matchesCategory(site, category))
+      .map((site) => {
+        const fields = [
+          site.name, site.address, site.old, site.hook, site.story, site.anchor,
+          ...(site.people || []), ...(site.facts || []),
+          ...(site.chapters || []).flatMap((chapter) => [chapter.title, chapter.text]),
+          ...(site.architecture || []).flatMap((note) => [note.title, note.text]),
+        ].filter(Boolean).map((value) => String(value).toLowerCase());
+        if (!q) return { site, score: 0 };
+        if (!fields.some((field) => field.includes(q))) return null;
+        const score =
+          (site.name.toLowerCase().includes(q) ? 100 : 0) +
+          (site.address.toLowerCase().includes(q) ? 60 : 0) +
+          (site.people.some((name) => name.toLowerCase().includes(q)) ? 40 : 0) +
+          fields.filter((field) => field.includes(q)).length;
+        return { site, score };
+      })
+      .filter((item): item is { site: Site; score: number } => Boolean(item))
+      .sort((a, b) => b.score - a.score)
+      .map((item) => item.site);
   }, [category, query]);
 
   const visible = showAll || query || category !== "全部" ? filtered : filtered.slice(0, 12);
@@ -63,7 +110,7 @@ export default function Home() {
       <nav className="nav">
         <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
-          <a href="#bases">16处基地</a><a href="#archive">{totalSites}处点位</a>
+          <a href="#bases">15+1基地档案</a><a href="#archive">{totalSites}处点位</a>
           <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#routes">现场线路</a>
         </div>
         <a className="nav-cta" href="#archive">检索史料</a>
@@ -75,18 +122,18 @@ export default function Home() {
         <div className="hero-orbit orbit-b" aria-hidden="true" />
         <div className="hero-copy">
           <p className="kicker"><i /> 民盟上海市委宣传部 · 上海盟史资料工程</p>
-          <h1><span>{totalSites}处历史现场，</span><br />16处传统教育阵地。</h1>
+          <h1><span>{totalSites}处历史现场，</span><br />16处传统教育档案。</h1>
           <p className="hero-lede">民盟是从爱国两个字上长出来的。</p>
           <div className="hero-actions">
-            <a className="primary-btn" href="#bases">先看16处基地 <span>↓</span></a>
+            <a className="primary-btn" href="#bases">先看15+1基地档案 <span>↓</span></a>
             <a className="ghost-btn" href="#archive">检索{totalSites}处点位</a>
           </div>
         </div>
         <div className="hero-data">
           <div className="hero-number"><b>{totalSites}</b><span>处可检索的上海盟史点位</span></div>
           <div className="metric-grid">
-            <div><b>16</b><span>传统教育阵地</span></div>
-            <div><b>12</b><span>核心人物索引</span></div>
+            <div><b>15+1</b><span>已挂牌 · 建设中</span></div>
+            <div><b>{totalPeople}</b><span>位相关人物索引</span></div>
             <div><b>18</b><span>历史节点</span></div>
             <div><b>4</b><span>条现场主题线路</span></div>
           </div>
@@ -98,41 +145,21 @@ export default function Home() {
         <div className="section-head">
           <div>
             <div className="section-label">TRADITIONAL EDUCATION SITES · 16</div>
-            <h2>先从16处基地，<br />进入上海民盟史。</h2>
+            <h2>15处已挂牌，1处建设中，<br />从基地档案进入上海民盟史。</h2>
             <p>每处基地都不是一块孤立的牌子。这里保存完整的前因后果、人物关系、关键原话和现场细节，让一处地址可以展开成一段真正可讲述的上海民盟史。</p>
           </div>
         </div>
         <div className="base-list">
           {bases.map((site, index) => (
-            <button key={site.id} onClick={() => setSelected(site)}>
+            <button key={site.id} onClick={() => openSite(site)}>
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
               <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
+              {/* GitHub Pages uses verified local archival images without an image proxy. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" />}
               <b>打开完整故事 ↗</b>
             </button>
           ))}
-        </div>
-      </section>
-
-      <section className="organization-history" id="organization-history">
-        <div className="organization-visual">
-          <div className="section-label light">ORGANIZATION HISTORY · 05</div>
-          <h2>五处地址，<br />一条机关沿革。</h2>
-          <p>第一站是1946年的南海花园饭店。此后，上海民盟的机关地址随组织公开程度、工作方式和履职阶段而变化。</p>
-          <img src="./organization-history.jpg" alt="上海民盟机关沿革五处地址图" />
-        </div>
-        <div className="organization-list">
-          {organizationHistory.map((item, index) => {
-            const site = sites.find((entry) => entry.id === item.siteId)!;
-            return (
-              <button key={item.siteId} onClick={() => setSelected(site)}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <b>{item.year}</b>
-                <div><h3>{item.title}</h3><p>{item.address}</p><small>{item.note}</small></div>
-                <em>打开档案 ↗</em>
-              </button>
-            );
-          })}
         </div>
       </section>
 
@@ -166,7 +193,7 @@ export default function Home() {
         </div>
         <div className="site-grid">
           {visible.map((site) => (
-            <SiteCard key={site.id} site={{ ...site, address: addressMode === "old" && site.old ? site.old : site.address }} onOpen={() => setSelected(site)} />
+            <SiteCard key={site.id} site={{ ...site, address: addressMode === "old" && site.old ? site.old : site.address }} onOpen={() => openSite(site)} />
           ))}
         </div>
         {!filtered.length && <div className="empty-state"><b>没有找到对应点位</b><p>试试人物姓名、区名，或“教育”“英烈”“救国”等关键词。</p></div>}
@@ -218,7 +245,7 @@ export default function Home() {
         <div className="route-map">
           <div className="map-grid" aria-hidden="true" /><div className="route-line" aria-hidden="true" />
           {routeSites.map((site, i) => (
-            <button key={site.id} className="route-stop" style={{ left: `${14 + (i % 4) * 24}%`, top: `${18 + Math.floor(i / 4) * 48 + (i % 2) * 8}%` }} onClick={() => setSelected(site)}>
+            <button key={site.id} className="route-stop" style={{ left: `${14 + (i % 4) * 24}%`, top: `${18 + Math.floor(i / 4) * 48 + (i % 2) * 8}%` }} onClick={() => openSite(site)}>
               <i>{i + 1}</i><span>{site.name}</span><small>{site.district}</small>
             </button>
           ))}
@@ -231,7 +258,7 @@ export default function Home() {
         <div className="district-bars">
           {districtCounts.map((item, i) => (
             <button key={item.district} onClick={() => { setCategory("全部"); setQuery(item.district); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" }); }}>
-              <span>{String(i + 1).padStart(2, "0")}</span><b>{item.district}</b><i style={{ width: `${Math.max(20, item.count * 9)}%` }} /><em>{item.count}</em>
+              <span>{String(i + 1).padStart(2, "0")}</span><b>{item.district}</b><i style={{ width: `${Math.min(100, Math.max(20, item.count * 9))}%` }} /><em>{item.count}</em>
             </button>
           ))}
         </div>
@@ -254,28 +281,47 @@ export default function Home() {
       </footer>
 
       {selected && (
-        <div className="drawer-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setSelected(null)}>
-          <aside className="drawer" role="dialog" aria-modal="true" aria-label={`${selected.name}专题档案`}>
-            <button className="drawer-close" onClick={() => setSelected(null)} aria-label="关闭">×</button>
+        <div className="drawer-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && closeSite()}>
+          <aside className="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+            <button ref={closeButtonRef} className="drawer-close" onClick={closeSite} aria-label="关闭">×</button>
             <div className="drawer-hero">
               <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
-              <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
+              <small>{selected.year}</small><h2 id="drawer-title">{selected.name}</h2><p>{selected.hook}</p>
             </div>
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
             </div>
+            <nav className="drawer-index" aria-label="档案章节">
+              <a href="#drawer-story">完整故事</a>
+              {!!selected.architecture?.length && <a href="#drawer-space">建筑空间</a>}
+              {!!selected.people.length && <a href="#drawer-people">相关人物</a>}
+              <span>{selected.chapters?.reduce((sum, item) => sum + item.text.length, 0) || 0}字故事正文</span>
+            </nav>
             <div className="drawer-body">
+              <section className="archive-abstract">
+                <label>档案摘要</label>
+                <p>{selected.story}</p>
+              </section>
               {!!selected.facts?.length && <section><label>关键事实</label><div className="fact-grid">{selected.facts.map((fact) => <span key={fact}>{fact}</span>)}</div></section>}
-              {!!selected.architecture?.length && <section className="architecture-notes">
+              {!!selected.architecture?.length && <section className="architecture-notes" id="drawer-space">
                 <label>建筑与空间</label>
                 {selected.architecture.map((note) => <article key={note.title}><h3>{note.title}</h3><p>{note.text}</p></article>)}
               </section>}
-              <section className="story-chapters">
+              <section className="story-chapters" id="drawer-story">
                 <label>完整故事</label>
                 {selected.chapters?.map((chapter, index) => <article key={chapter.title}><small>{String(index + 1).padStart(2, "0")}</small><div><h3>{chapter.title}</h3><p>{chapter.text}</p></div></article>)}
               </section>
-              {!!selected.people.length && <section><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { setSelected(null); setQuery(p); setCategory("全部"); setShowAll(true); }}>{p}</button>)}</div></section>}
+              {!!selected.people.length && <section id="drawer-people"><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { closeSite(); setQuery(p); setCategory("全部"); setShowAll(true); }}>{p}</button>)}</div></section>}
+              <section className="related-sites">
+                <label>继续沿人物与事件阅读</label>
+                <div>
+                  {sites
+                    .filter((item) => item.id !== selected.id && (item.people.some((person) => selected.people.includes(person)) || item.category === selected.category))
+                    .slice(0, 3)
+                    .map((item) => <button key={item.id} onClick={() => openSite(item)}><span>{item.category}</span><b>{item.name}</b><small>{item.district} · {item.address}</small></button>)}
+                </div>
+              </section>
               <section className="anchor-box"><label>故事线索</label><p>{selected.anchor}</p></section>
             </div>
           </aside>

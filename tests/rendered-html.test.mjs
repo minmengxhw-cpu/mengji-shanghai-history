@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import ts from "typescript";
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -24,12 +25,14 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   const html = await response.text();
   assert.match(html, /<title>盟迹 · 上海民盟历史知识库<\/title>/i);
   assert.match(html, /67(?:<!-- -->)?处历史现场/);
-  assert.match(html, /16处传统教育阵地/);
+  assert.match(html, /16处传统教育档案/);
+  assert.match(html, /15处已挂牌，1处建设中/);
   assert.match(html, /民盟是从爱国两个字上长出来的/);
-  assert.match(html, /五处地址，/);
   assert.match(html, /南海花园饭店/);
   assert.match(html, /完整故事/);
+  assert.match(html, /15\+1基地档案/);
   assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
+  assert.doesNotMatch(html, /上海民盟机关沿革 · 五处地址|organization-history\.jpg/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
 });
 
@@ -44,18 +47,36 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.match(data, /architecture\?: \{ title: string; text: string \}\[\]/);
   assert.match(data, /const architecture:/);
   assert.match(page, /architecture-notes/);
-  assert.match(data, /export const organizationHistory/);
   assert.match(data, /const secondaryCategories:/);
   assert.match(data, /supplementalStories/);
+  assert.match(data, /deepResearchStories/);
   assert.match(data, /周谷城旧居/);
   assert.match(data, /华东师范大学校史馆/);
   assert.match(data, /苏步青旧居/);
   assert.match(data, /谈家桢、陈建功旧居/);
   assert.match(data, /陈伯吹纪念馆/);
   assert.match(data, /丁聪美术馆/);
-  assert.match(page, /organization-history\.jpg/);
+  assert.doesNotMatch(page, /organization-history\.jpg/);
   assert.doesNotMatch(page, /drawer-photo/);
   assert.doesNotMatch(page, /assetSrc\(selected\.image\)/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
+});
+
+test("keeps all 67 site dossiers substantial", async () => {
+  const source = await readFile(new URL("../app/data.ts", import.meta.url), "utf8");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const exports = {};
+  new Function("exports", "module", compiled)(exports, { exports });
+
+  assert.equal(exports.sites.length, 67);
+  for (const site of exports.sites) {
+    assert.ok(site.chapters.length >= 6, `${site.id} should have at least 6 story chapters`);
+    const storyLength = site.story.length
+      + site.chapters.reduce((sum, chapter) => sum + chapter.text.length, 0)
+      + (site.architecture || []).reduce((sum, note) => sum + note.text.length, 0);
+    assert.ok(storyLength >= 450, `${site.id} dossier is too short (${storyLength} chars)`);
+  }
 });
