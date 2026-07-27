@@ -38,6 +38,7 @@ export default function Home() {
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
+  const totalSites = sites.length;
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return sites.filter((site) => {
@@ -62,7 +63,7 @@ export default function Home() {
       <nav className="nav">
         <a className="brand" href="#top"><span>盟迹</span><em>上海民盟历史知识库</em></a>
         <div className="nav-links">
-          <a href="#bases">16处基地</a><a href="#archive">51处点位</a>
+          <a href="#bases">16处基地</a><a href="#archive">{totalSites}处点位</a>
           <a href="#timeline">历史主线</a><a href="#people">人物</a><a href="#routes">现场线路</a>
         </div>
         <a className="nav-cta" href="#archive">检索史料</a>
@@ -74,22 +75,22 @@ export default function Home() {
         <div className="hero-orbit orbit-b" aria-hidden="true" />
         <div className="hero-copy">
           <p className="kicker"><i /> 民盟上海市委宣传部 · 上海盟史资料工程</p>
-          <h1><span>51处历史现场，</span><br />16处传统教育阵地。</h1>
+          <h1><span>{totalSites}处历史现场，</span><br />16处传统教育阵地。</h1>
           <p className="hero-lede">民盟是从爱国两个字上长出来的。</p>
           <div className="hero-actions">
             <a className="primary-btn" href="#bases">先看16处基地 <span>↓</span></a>
-            <a className="ghost-btn" href="#archive">检索51处点位</a>
+            <a className="ghost-btn" href="#archive">检索{totalSites}处点位</a>
           </div>
         </div>
         <div className="hero-data">
-          <div className="hero-number"><b>51</b><span>处可检索的上海盟史点位</span></div>
+          <div className="hero-number"><b>{totalSites}</b><span>处可检索的上海盟史点位</span></div>
           <div className="metric-grid">
             <div><b>16</b><span>传统教育阵地</span></div>
             <div><b>12</b><span>核心人物索引</span></div>
             <div><b>18</b><span>历史节点</span></div>
             <div><b>4</b><span>条现场主题线路</span></div>
           </div>
-          <p className="scope-note"><strong>从地址进入历史</strong>　51处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。</p>
+          <p className="scope-note"><strong>从地址进入历史</strong>　{totalSites}处涵盖传统教育基地、名人故居、机关沿革、事件现场、民盟前史、英烈纪念与高校延伸。</p>
         </div>
       </header>
 
@@ -138,8 +139,8 @@ export default function Home() {
       <section className="stories" id="archive">
         <div className="section-head">
           <div>
-            <div className="section-label">HISTORY ARCHIVE · 51</div>
-            <h2>五十一处历史现场</h2>
+            <div className="section-label">HISTORY ARCHIVE · {totalSites}</div>
+            <h2>{totalSites}处历史现场</h2>
             <p>搜索地址、人名、事件或一句原话。每项档案包含故事章节、关键事实、相关人物和与其他点位之间的联系。</p>
           </div>
           <div className="address-toggle" aria-label="地址显示方式">
@@ -169,7 +170,7 @@ export default function Home() {
           ))}
         </div>
         {!filtered.length && <div className="empty-state"><b>没有找到对应点位</b><p>试试人物姓名、区名，或“教育”“英烈”“救国”等关键词。</p></div>}
-        {!showAll && !query && category === "全部" && <button className="show-all" onClick={() => setShowAll(true)}>展开全部51处点位 <span>↓</span></button>}
+        {!showAll && !query && category === "全部" && <button className="show-all" onClick={() => setShowAll(true)}>展开全部{totalSites}处点位 <span>↓</span></button>}
       </section>
 
       <section className="timeline-section" id="timeline">
