@@ -83,6 +83,9 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(styles, /scroll-behavior:\s*smooth/);
   assert.doesNotMatch(styles, /\.nav\{[^}]*position:sticky/);
   assert.doesNotMatch(styles, /\.drawer-index\{[^}]*position:sticky/);
+  assert.match(page, /className="base-entry"/);
+  assert.match(page, /role="button"/);
+  assert.doesNotMatch(styles, /\.base-list button/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
   assert.match(script, /dist\/client\/sites-optimized/);
