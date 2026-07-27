@@ -56,9 +56,10 @@ test("serves lightweight versions of all 16 verified site photos", async () => {
 });
 
 test("keeps architecture cross-reference content in the public site source", async () => {
-  const [data, page, workflow, script] = await Promise.all([
+  const [data, page, styles, workflow, script] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8"),
     readFile(new URL("../scripts/build-pages.sh", import.meta.url), "utf8"),
   ]);
@@ -78,6 +79,8 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(page, /organization-history\.jpg/);
   assert.doesNotMatch(page, /drawer-photo/);
   assert.doesNotMatch(page, /assetSrc\(selected\.image\)/);
+  assert.doesNotMatch(page, /behavior:\s*["']smooth["']/);
+  assert.doesNotMatch(styles, /scroll-behavior:\s*smooth/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
   assert.match(script, /dist\/client\/sites-optimized/);

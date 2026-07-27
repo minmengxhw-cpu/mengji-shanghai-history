@@ -112,7 +112,7 @@ export default function Home() {
     const drawer = drawerRef.current;
     const target = drawer?.querySelector<HTMLElement>(`#${id}`);
     if (!drawer || !target) return;
-    drawer.scrollTo({ top: Math.max(0, target.offsetTop - 58), behavior: "smooth" });
+    drawer.scrollTo({ top: Math.max(0, target.offsetTop - 58), behavior: "auto" });
   }, []);
 
   const filtered = useMemo(() => {
@@ -268,7 +268,7 @@ export default function Home() {
         </div>
         <div className="people-grid">
           {people.map(([name, years, role, quote], i) => (
-            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setDistrict("全部"); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" }); }}>
+            <button key={name} onClick={() => { setQuery(name); setCategory("全部"); setDistrict("全部"); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "auto" }); }}>
               <span className="person-no">{String(i + 1).padStart(2, "0")}</span>
               <div className="person-monogram">{name.replace(/\s/g, "").slice(0, 1)}</div>
               <h3>{name}</h3><small>{years}</small><p>{role}</p><blockquote>{quote}</blockquote><em>查看相关点位 ↗</em>
@@ -307,7 +307,7 @@ export default function Home() {
         <div className="section-head compact"><div><div className="section-label">CITY INDEX</div><h2>地址变了，是因为城市变了</h2><p>门牌沿革记录组织活动如何借用饭店、医院、学校、里弄与办公楼。点击区名可直接筛选。</p></div></div>
         <div className="district-bars">
           {districtCounts.map((item, i) => (
-            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(""); setDistrict(item.district); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "smooth" }); }}>
+            <button key={item.district} onClick={() => { setCategory("全部"); setQuery(""); setDistrict(item.district); setShowAll(true); document.getElementById("archive")?.scrollIntoView({ behavior: "auto" }); }}>
               <span>{String(i + 1).padStart(2, "0")}</span><b>{item.district}</b><i style={{ width: `${Math.max(6, (item.count / maxDistrictCount) * 100)}%` }} /><em>{item.count}</em>
             </button>
           ))}
