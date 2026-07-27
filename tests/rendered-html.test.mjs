@@ -25,16 +25,25 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   const html = await response.text();
   assert.match(html, /<title>盟迹 · 上海民盟历史知识库<\/title>/i);
   assert.match(html, /66(?:<!-- -->)?处历史现场/);
-  assert.match(html, /16处传统教育档案/);
-  assert.match(html, /从16处传统教育基地/);
+  assert.match(html, /16(?:<!-- -->)?处传统教育档案/);
+  assert.match(html, /从(?:<!-- -->)?16(?:<!-- -->)?处传统教育基地/);
   assert.match(html, /民盟是从爱国两个字上长出来的/);
   assert.match(html, /南海花园饭店/);
   assert.match(html, /完整故事/);
-  assert.match(html, /16处基地/);
+  assert.match(html, /16(?:<!-- -->)?处基地/);
   assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
   assert.doesNotMatch(html, /上海民盟机关沿革 · 五处地址|organization-history\.jpg/);
   assert.doesNotMatch(html, /四人帮|文化大革命|右派|汉奸|特务|法西斯|杀头|酷刑|黑名单/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
+
+  assert.doesNotMatch(html, />0\d\d</);
+  assert.match(html, /<b>今天<\/b><span>18<\/span>/);
+  assert.match(html, /<b>04<\/b>文化与当代/);
+
+  const bars = html.match(/class="district-bars"[\s\S]*?<\/div>\s*<\/section>/)?.[0] ?? "";
+  const widths = bars.match(/width:([\d.]+)%/g) ?? [];
+  assert.ok(widths.length >= 10, `expected district bars, got ${widths.length}`);
+  assert.equal(widths.filter((width) => width === "width:100%").length, 1);
 });
 
 test("serves lightweight versions of all 16 verified site photos", async () => {
@@ -72,6 +81,8 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(script, /mengji-shanghai-history/);
   assert.match(script, /dist\/client\/sites-optimized/);
+  assert.match(script, /pages_base=/);
+  assert.match(script, /404\.html/);
 });
 
 test("keeps all 66 site dossiers substantial and residence addresses unique", async () => {

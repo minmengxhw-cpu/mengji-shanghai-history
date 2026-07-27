@@ -48,4 +48,12 @@ perl -pi -e '
   s#\\"/sites-optimized/#\\"./sites-optimized/#g;
   s#css:/assets/#css:./assets/#g;
 ' "$output_dir/index.html"
-cp "$output_dir/index.html" "$output_dir/404.html"
+# GitHub Pages serves 404.html from arbitrary nested paths. Relative asset
+# references that work at the project root would otherwise resolve one level
+# too deep and leave the fallback page blank.
+pages_base="${PAGES_BASE:-/mengji-shanghai-history}"
+perl -pe "
+  s#\"\\./(assets|sites-optimized|sites|favicon|og|organization-history)#\"${pages_base}/\$1#g;
+  s#\\\\\"\\./(assets|sites-optimized|sites)/#\\\\\"${pages_base}/\$1/#g;
+  s#css:\\./assets/#css:${pages_base}/assets/#g;
+" "$output_dir/index.html" >"$output_dir/404.html"
