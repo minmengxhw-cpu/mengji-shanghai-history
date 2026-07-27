@@ -255,6 +255,10 @@ export default function Home() {
             </div>
             <div className="drawer-body">
               {!!selected.facts?.length && <section><label>关键事实</label><div className="fact-grid">{selected.facts.map((fact) => <span key={fact}>{fact}</span>)}</div></section>}
+              {!!selected.architecture?.length && <section className="architecture-notes">
+                <label>建筑与空间</label>
+                {selected.architecture.map((note) => <article key={note.title}><h3>{note.title}</h3><p>{note.text}</p></article>)}
+              </section>}
               <section className="story-chapters">
                 <label>完整故事</label>
                 {selected.chapters?.map((chapter, index) => <article key={chapter.title}><small>{String(index + 1).padStart(2, "0")}</small><div><h3>{chapter.title}</h3><p>{chapter.text}</p></div></article>)}
