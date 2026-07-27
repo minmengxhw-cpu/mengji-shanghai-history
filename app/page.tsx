@@ -193,21 +193,23 @@ export default function Home() {
             <article
               className="base-entry"
               key={site.id}
-              role="button"
-              tabIndex={0}
               onClick={() => openSite(site)}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                event.preventDefault();
-                openSite(site);
-              }}
             >
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
               <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
               {/* GitHub Pages uses verified local archival images without an image proxy. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" decoding="async" width="640" height="480" />}
-              <b>打开完整故事 ↗</b>
+              <button
+                className="base-open"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openSite(site);
+                }}
+              >
+                打开完整故事 ↗
+              </button>
             </article>
           ))}
         </div>
