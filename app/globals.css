@@ -14,6 +14,7 @@ button,input{font:inherit}
 button,a{ -webkit-tap-highlight-color:transparent}
 button{color:inherit}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.stories,.timeline-section,.people-section,.routes,.districts,.method,footer{content-visibility:auto;contain-intrinsic-size:1px 900px}
 .nav{height:72px;background:rgba(7,22,41,.95);color:#fff;display:flex;align-items:center;padding:0 4vw;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(54,216,255,.22);backdrop-filter:blur(16px)}
 .brand{display:flex;align-items:center;gap:14px;color:#fff;text-decoration:none}.brand span{font-family:var(--serif);font-weight:900;font-size:25px;letter-spacing:.14em}.brand em{font-style:normal;font-size:11px;letter-spacing:.16em;color:#90a9bf}
 .nav-links{display:flex;gap:30px;margin-left:auto}.nav-links a{color:#aebdcc;text-decoration:none;font-size:14px}.nav-links a:hover{color:var(--cyan)}

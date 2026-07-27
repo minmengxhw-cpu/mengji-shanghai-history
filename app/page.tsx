@@ -146,7 +146,7 @@ export default function Home() {
           <div>
             <div className="section-label">TRADITIONAL EDUCATION SITES · 16</div>
             <h2>从16处传统教育基地，<br />进入上海民盟史。</h2>
-            <p>每处基地都不是一块孤立的牌子。这里保存完整的前因后果、人物关系、关键原话和现场细节，让一处地址可以展开成一段真正可讲述的上海民盟史。</p>
+            <p>这些基地记录着上海民盟一路走来的重要时刻。人物、事件和现场细节被整理在同一处，方便讲解员查阅，也方便沿着一个地址继续了解它背后的历史。</p>
           </div>
         </div>
         <div className="base-list">
@@ -156,7 +156,7 @@ export default function Home() {
               <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
               {/* GitHub Pages uses verified local archival images without an image proxy. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" />}
+              {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" decoding="async" width="640" height="480" />}
               <b>打开完整故事 ↗</b>
             </button>
           ))}

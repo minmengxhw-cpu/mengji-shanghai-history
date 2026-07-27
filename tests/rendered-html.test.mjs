@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 import ts from "typescript";
 
@@ -33,7 +33,17 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   assert.match(html, /16处基地/);
   assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
   assert.doesNotMatch(html, /上海民盟机关沿革 · 五处地址|organization-history\.jpg/);
+  assert.doesNotMatch(html, /四人帮|文化大革命|右派|汉奸|特务|法西斯|杀头|酷刑|黑名单/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
+});
+
+test("serves lightweight versions of all 16 verified site photos", async () => {
+  const imageDirectory = new URL("../public/sites-optimized/", import.meta.url);
+  const names = (await readdir(imageDirectory)).filter((name) => name.endsWith(".jpg"));
+  assert.equal(names.length, 16);
+  const sizes = await Promise.all(names.map((name) => stat(new URL(name, imageDirectory))));
+  assert.ok(sizes.every((item) => item.size < 150_000), "each optimized photo should stay under 150 KB");
+  assert.ok(sizes.reduce((sum, item) => sum + item.size, 0) < 1_600_000, "optimized photo set should stay under 1.6 MB");
 });
 
 test("keeps architecture cross-reference content in the public site source", async () => {
