@@ -12,6 +12,8 @@ const catClass: Record<string, string> = {
 const matchesCategory = (site: Site, item: string) =>
   site.category === item || site.secondaryCategories?.includes(item as Site["category"]);
 
+const assetSrc = (path: string) => path.startsWith("/") ? `.${path}` : path;
+
 function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }) {
   return (
     <button className="site-card" onClick={() => onOpen(site)}>
@@ -104,7 +106,7 @@ export default function Home() {
             <button key={site.id} onClick={() => setSelected(site)}>
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
               <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
-              {site.image && <img src={site.image} alt={site.imageAlt || site.name} loading="lazy" />}
+              {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" />}
               <b>打开完整故事 ↗</b>
             </button>
           ))}
@@ -116,7 +118,7 @@ export default function Home() {
           <div className="section-label light">ORGANIZATION HISTORY · 05</div>
           <h2>五处地址，<br />一条机关沿革。</h2>
           <p>第一站是1946年的南海花园饭店。此后，上海民盟的机关地址随组织公开程度、工作方式和履职阶段而变化。</p>
-          <img src="/organization-history.jpg" alt="上海民盟机关沿革五处地址图" />
+          <img src="./organization-history.jpg" alt="上海民盟机关沿革五处地址图" />
         </div>
         <div className="organization-list">
           {organizationHistory.map((item, index) => {
@@ -258,7 +260,10 @@ export default function Home() {
               <div className="drawer-badges"><span className={`tag ${catClass[selected.category]}`}>{selected.category}</span></div>
               <small>{selected.year}</small><h2>{selected.name}</h2><p>{selected.hook}</p>
             </div>
-            <figure className="drawer-photo"><img src="/organization-history.jpg" alt="上海民盟机关沿革五处地址图" /><figcaption>上海民盟机关沿革 · 五处地址</figcaption></figure>
+            {selected.image && <figure className="drawer-photo">
+              <img src={assetSrc(selected.image)} alt={selected.imageAlt || selected.name} />
+              <figcaption>{selected.imageAlt || `${selected.name}实景`}</figcaption>
+            </figure>}
             <div className="drawer-address">
               <div><span>今址</span><b>{selected.district} · {selected.address}</b></div>
               {selected.old && <div><span>旧址</span><b>{selected.old}</b></div>}
