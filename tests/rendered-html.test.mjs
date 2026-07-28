@@ -86,12 +86,15 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(styles, /content-visibility:\s*auto/);
   assert.match(styles, /overflow-anchor:none/);
   assert.match(page, /const goToSection/);
-  assert.match(page, /window\.scrollTo\(0, top\)/);
+  assert.match(page, /window\.scrollTo\(\{ top, left: 0, behavior: "auto" \}\)/);
+  assert.doesNotMatch(page, /body\.style\.overflow|documentElement\.style\.overflow|drawer-open/);
+  assert.doesNotMatch(styles, /body\.drawer-open/);
   assert.doesNotMatch(styles, /\.nav\{[^}]*position:sticky/);
   assert.doesNotMatch(styles, /\.drawer-index\{[^}]*position:sticky/);
   assert.match(page, /className="base-entry"/);
   assert.match(page, /className="base-open"/);
-  assert.doesNotMatch(page, /className="base-entry"[\s\S]{0,80}role="button"/);
+  assert.match(page, /role="button"/);
+  assert.match(page, /tabIndex=\{0\}/);
   assert.doesNotMatch(styles, /\.base-list button/);
   assert.match(styles, /\.base-entry \*\{pointer-events:none\}/);
   assert.match(styles, /\.base-entry \.base-open\{pointer-events:auto\}/);
@@ -119,6 +122,25 @@ test("keeps all 66 site dossiers substantial and residence addresses unique", as
   assert.equal(exports.sites.find((site) => site.id === "li-home")?.category, "名人故居");
   assert.equal(exports.sites.find((site) => site.id === "yuyuan-749")?.name, "民盟上海市支部筹委会成立地");
   assert.ok(!exports.sites.some((site) => site.id === "liwen-report"));
+  const pan = exports.sites.find((site) => site.id === "pan");
+  assert.match(pan?.year ?? "", /2026 · 6 · 26 · 第16处/);
+  const secondPlenum = exports.sites.find((site) => site.id === "second-plenum");
+  assert.equal(secondPlenum?.address, "愚园路1352弄5号楼");
+  assert.doesNotMatch(JSON.stringify(secondPlenum), /民主与反民主|绝无中立|愚园路1320号/);
+  const shanyin = exports.sites.find((site) => site.id === "shen-shanyin-home");
+  assert.equal(shanyin?.address, "今山阴路一带");
+  assert.equal(shanyin?.old, "施高塔路恒盛里12号");
+  const cottonGuild = exports.sites.find((site) => site.id === "cotton-guild");
+  assert.equal(cottonGuild?.name, "民盟上海市第一次盟员大会旧址");
+  assert.equal(cottonGuild?.address, "南京西路772号");
+  assert.equal(cottonGuild?.old, "南京西路722号");
+  const huangStories = exports.sites
+    .filter((site) => site.people.includes("黄竞武"))
+    .map((site) => JSON.stringify(site))
+    .join("");
+  assert.match(huangStories, /1949年5月12日上午/);
+  assert.doesNotMatch(huangStories, /家中被捕|46岁|47岁|主流权威/);
+  assert.doesNotMatch(source, /一说|据流传|尚需|待核实|待定论|主流权威/);
   for (const site of exports.sites) {
     assert.ok(site.chapters.length >= 6, `${site.id} should have at least 6 story chapters`);
     const storyLength = site.story.length

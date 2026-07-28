@@ -56,68 +56,78 @@ export default function Home() {
   const [addressMode, setAddressMode] = useState<"now" | "old">("now");
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
 
   const bases = sites.filter((site) => site.category === "传统教育基地");
   const totalSites = sites.length;
-  const isDrawerOpen = Boolean(selected);
   const totalPeople = new Set(sites.flatMap((site) => site.people).filter((name) => name && !name.includes("机关"))).size;
   const openSite = useCallback((site: Site) => {
+    lastFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setSelected(site);
     const url = new URL(window.location.href);
     url.searchParams.set("site", site.id);
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    window.history.pushState({ site: site.id }, "", `${url.pathname}${url.search}${url.hash}`);
   }, []);
   const closeSite = useCallback(() => {
     setSelected(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("site");
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    window.setTimeout(() => lastFocusedRef.current?.focus(), 0);
   }, []);
   const goToSection = useCallback((id: string) => {
     const target = document.getElementById(id);
     if (!target) return;
-
-    // Avoid native hash navigation on this long, dynamically rendered page.
-    document.body.classList.remove("drawer-open");
-    document.body.style.removeProperty("overflow");
-    document.documentElement.style.removeProperty("overflow");
+    setSelected(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("site");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    const top = target.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo(0, top);
+    window.requestAnimationFrame(() => {
+      const top = target.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top, left: 0, behavior: "auto" });
+    });
   }, []);
 
   useEffect(() => {
-    if (!isDrawerOpen) {
-      document.body.classList.remove("drawer-open");
-      return;
-    }
-    const body = document.body;
-    const root = document.documentElement;
-    const previousBodyOverflow = body.style.overflow;
-    const previousRootOverflow = root.style.overflow;
-    body.classList.add("drawer-open");
-    body.style.overflow = "hidden";
-    root.style.overflow = "hidden";
+    if (!selected) return;
     window.setTimeout(() => closeButtonRef.current?.focus(), 40);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeSite();
+      if (event.key !== "Tab" || !drawerRef.current) return;
+      const focusable = [...drawerRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => {
-      body.classList.remove("drawer-open");
-      body.style.overflow = previousBodyOverflow;
-      root.style.overflow = previousRootOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [closeSite, isDrawerOpen]);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [closeSite, selected]);
 
   useEffect(() => {
     if (selected && drawerRef.current) drawerRef.current.scrollTop = 0;
   }, [selected]);
 
   useEffect(() => {
-    const id = new URL(window.location.href).searchParams.get("site");
-    if (id) setSelected(sites.find((item) => item.id === id) || null);
+    const syncFromUrl = () => {
+      const id = new URL(window.location.href).searchParams.get("site");
+      setSelected(id ? sites.find((item) => item.id === id) || null : null);
+    };
+    const timer = window.setTimeout(syncFromUrl, 0);
+    window.addEventListener("popstate", syncFromUrl);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("popstate", syncFromUrl);
+    };
   }, []);
 
   const scrollDrawerTo = useCallback((id: string) => {
@@ -184,7 +194,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-data">
-          <div className="hero-number"><b>{totalSites}</b><span>处可检索的<br /><em>上海盟史点位</em></span></div>
+          <div className="hero-number"><b>{totalSites}</b><span>处可检索的<em>上海盟史点位</em></span></div>
           <div className="metric-grid">
             <div><b>{bases.length}</b><span>传统教育基地</span></div>
             <div><b>{totalPeople}</b><span>位相关人物索引</span></div>
@@ -209,6 +219,15 @@ export default function Home() {
               className="base-entry"
               key={site.id}
               onClick={() => openSite(site)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openSite(site);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`打开${site.name}完整故事`}
             >
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
               <div className="base-copy"><small>{site.year}</small><h3>{site.name}</h3><p>{site.hook}</p></div>
@@ -390,7 +409,7 @@ export default function Home() {
                 <label>完整故事</label>
                 {selected.chapters?.map((chapter, index) => <article key={chapter.title}><small>{String(index + 1).padStart(2, "0")}</small><div><h3>{chapter.title}</h3><p>{chapter.text}</p></div></article>)}
               </section>
-              {!!selected.people.length && <section id="drawer-people"><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { closeSite(); setQuery(p); setCategory("全部"); setDistrict("全部"); setShowAll(true); }}>{p}</button>)}</div></section>}
+              {!!selected.people.length && <section id="drawer-people"><label>相关人物</label><div className="person-tags">{selected.people.map((p) => <button key={p} onClick={() => { setQuery(p); setCategory("全部"); setDistrict("全部"); setShowAll(true); goToSection("archive"); }}>{p}</button>)}</div></section>}
               <section className="related-sites">
                 <label>继续沿人物与事件阅读</label>
                 <div>
