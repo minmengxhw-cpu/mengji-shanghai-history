@@ -55,6 +55,13 @@ test("serves lightweight versions of all 16 verified site photos", async () => {
   assert.ok(sizes.reduce((sum, item) => sum + item.size, 0) < 1_600_000, "optimized photo set should stay under 1.6 MB");
 });
 
+test("keeps the social share image accurate and lightweight", async () => {
+  const image = await readFile(new URL("../public/og.png", import.meta.url));
+  assert.equal(image.readUInt32BE(16), 1200);
+  assert.equal(image.readUInt32BE(20), 630);
+  assert.ok(image.byteLength < 300_000, "social share image should stay under 300 KB");
+});
+
 test("keeps architecture cross-reference content in the public site source", async () => {
   const [data, page, styles, workflow, script] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),

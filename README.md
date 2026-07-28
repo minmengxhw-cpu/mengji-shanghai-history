@@ -14,7 +14,7 @@
 | 建筑解读 | `architecture` | 建筑形制与空间属性 |
 | 配图 | `baseImages` | 点位配图与替代文本 |
 
-合并逻辑见 `app/data.ts` 末尾 `export const sites`；另导出 `timeline / people / routes / categories` 供页面使用。渲染入口为 `app/page.tsx`（原生交互，无前端框架依赖），样式在 `app/globals.css`。
+合并逻辑见 `app/data.ts` 末尾 `export const sites`；另导出 `timeline / people / routes / categories` 供页面使用。渲染入口为 `app/page.tsx`，页面交互使用 React，未引入第三方 UI 组件库；样式在 `app/globals.css`。
 
 ## 本地开发
 
@@ -40,4 +40,4 @@ npm run lint
 
 ## 技术栈
 
-Next 16（经 vinext 适配）+ Vite + React 19，生产运行于 Cloudflare Worker（`worker/index.ts`），静态快照供 GitHub Pages / CloudBase 使用。`db/` 与 Worker 中的 D1 / 图片优化分支为脚手架保留能力，本站为纯静态内容展示，未启用数据库。
+Next 16（经 vinext 适配）+ Vite + React 19。对外网站通过静态快照部署到 GitHub Pages 与 CloudBase；仓库保留的 `worker/index.ts`、D1 与图片优化分支属于脚手架扩展能力，当前网站为纯静态内容展示，未启用数据库。
