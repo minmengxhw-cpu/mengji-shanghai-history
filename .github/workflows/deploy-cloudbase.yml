@@ -36,10 +36,12 @@ jobs:
         run: bash scripts/build-pages.sh static-site
 
       # 仓库默认快照面向 GitHub Pages 子路径，含 github.io 绝对链接；
-      # 部署到 CloudBase 根目录需改写为相对路径，避免残留外链。
+      # 部署到 CloudBase 根目录需改写为根路径，避免残留外链与子路径。
+      # 注意：index.html 用相对 ./assets；404.html 用 /mengji-shanghai-history/assets 子路径绝对链接，
+      # 两者都要在 CloudBase 根目录下还原，否则 404 页资源全部指向不存在的子路径。
       - name: Rewrite absolute URLs for root deployment
         run: |
-          perl -pi -e 's#https://minmengxhw-cpu\.github\.io/mengji-shanghai-history/?#./#g;' static-site/*.html
+          perl -pi -e 's#https://minmengxhw-cpu\.github\.io/mengji-shanghai-history/?#./#g; s#/mengji-shanghai-history/#/#g;' static-site/*.html
 
       - name: Install CloudBase CLI
         run: npm install @cloudbase/cli

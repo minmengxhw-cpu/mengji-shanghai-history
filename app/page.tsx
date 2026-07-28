@@ -41,7 +41,7 @@ function SiteCard({ site, onOpen }: { site: Site; onOpen: (site: Site) => void }
       <h3>{site.name}</h3>
       <p className="address">{site.district} · {site.address}</p>
       <p className="hook">{site.hook}</p>
-      <span className="read">{site.chapters?.length || 2}节故事 <b>↗</b></span>
+      <span className="read">{site.chapters?.length || 6}节故事 <b>↗</b></span>
     </button>
   );
 }
@@ -258,14 +258,14 @@ export default function Home() {
           </div>
           <div className="address-toggle" aria-label="地址显示方式">
             <span>门牌</span>
-            <button className={addressMode === "now" ? "active" : ""} onClick={() => setAddressMode("now")}>今址</button>
-            <button className={addressMode === "old" ? "active" : ""} onClick={() => setAddressMode("old")}>旧址</button>
+            <button className={addressMode === "now" ? "active" : ""} aria-pressed={addressMode === "now"} onClick={() => setAddressMode("now")}>今址</button>
+            <button className={addressMode === "old" ? "active" : ""} aria-pressed={addressMode === "old"} onClick={() => setAddressMode("old")}>旧址</button>
           </div>
         </div>
         <div className="search-row">
           <label className="search-box">
             <span>⌕</span>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索点位、人物、地址、事件或引文…" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="搜索点位、人物、地址、事件或引文" placeholder="搜索点位、人物、地址、事件或引文…" />
             {query && <button onClick={() => setQuery("")} aria-label="清空搜索">×</button>}
           </label>
           <div className="result-count"><b>{filtered.length}</b> 个结果</div>
@@ -326,7 +326,7 @@ export default function Home() {
 
       <section className="routes" id="routes">
         <div className="route-intro">
-          <div className="section-label light">FIELD RESEARCH ROUTES · 04</div>
+          <div className="section-label light">FIELD RESEARCH ROUTES · {String(routes.length).padStart(2, "0")}</div>
           <h2>把档案带回现场</h2>
           <p>线路是研究索引，不是打卡清单。相邻地址被组织成一条历史因果链，便于实地复核建筑、门牌和空间关系。</p>
           <div className="route-tabs">

@@ -15,11 +15,13 @@ export function generateMetadata(): Metadata {
       title: "盟迹 · 上海民盟历史点位",
       description,
       type: "website",
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: "盟迹 · 上海民盟历史知识库" }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: "盟迹 · 上海民盟历史点位",
       description,
+      images: ["/og.png"],
     },
   };
 }
