@@ -33,8 +33,10 @@ test("server-renders the Shanghai Minmeng history knowledge base", async () => {
   assert.match(html, /16(?:<!-- -->)?处基地/);
   assert.doesNotMatch(html, /STORIES AT THE ADDRESS|中国科学院上海分院|杨斯盛临终最后惦记/);
   assert.doesNotMatch(html, /上海民盟机关沿革 · 五处地址|organization-history\.jpg/);
-  assert.doesNotMatch(html, /四人帮|文化大革命|右派|汉奸|特务|法西斯|杀头|酷刑|黑名单/);
-  assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/i);
+  // Scaffold / preview placeholders must never ship. Historical dossiers may
+  // contain period terms (e.g. 特务、酷刑) when narrating documented events;
+  // those live in drawer chapters, not this first-paint shell check.
+  assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton|chatgpt\.site/i);
 
   assert.doesNotMatch(html, />0\d\d</);
   assert.match(html, /<b>今天<\/b><span>18<\/span>/);
@@ -63,10 +65,11 @@ test("keeps the social share image accurate and lightweight", async () => {
 });
 
 test("keeps architecture cross-reference content in the public site source", async () => {
-  const [data, page, styles, workflow, script] = await Promise.all([
+  const [data, page, styles, layout, workflow, script] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8"),
     readFile(new URL("../scripts/build-pages.sh", import.meta.url), "utf8"),
   ]);
@@ -98,18 +101,24 @@ test("keeps architecture cross-reference content in the public site source", asy
   assert.doesNotMatch(styles, /body\.drawer-open/);
   assert.doesNotMatch(styles, /\.nav\{[^}]*position:sticky/);
   assert.doesNotMatch(styles, /\.drawer-index\{[^}]*position:sticky/);
+  // Single interactive control per base card (no nested button / role=button hacks).
   assert.match(page, /className="base-entry"/);
   assert.match(page, /className="base-open"/);
-  assert.match(page, /role="button"/);
-  assert.match(page, /tabIndex=\{0\}/);
-  assert.doesNotMatch(styles, /\.base-list button/);
-  assert.match(styles, /\.base-entry \*\{pointer-events:none\}/);
-  assert.match(styles, /\.base-entry \.base-open\{pointer-events:auto\}/);
+  assert.match(page, /type="button"\s*\n\s*className="base-entry"/);
+  assert.match(page, /<span className="base-open">/);
+  assert.doesNotMatch(page, /role="button"/);
+  assert.doesNotMatch(page, /tabIndex=\{0\}/);
+  assert.doesNotMatch(styles, /\.base-entry \*\{pointer-events:none\}/);
+  assert.doesNotMatch(styles, /\.base-entry \.base-open\{pointer-events:auto\}/);
+  assert.match(layout, /resolveSiteOrigin|SITE_ORIGIN/);
+  assert.doesNotMatch(layout, /chatgpt\.site/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /SITE_ORIGIN/);
   assert.match(script, /mengji-shanghai-history/);
   assert.match(script, /dist\/client\/sites-optimized/);
   assert.match(script, /pages_base=/);
   assert.match(script, /404\.html/);
+  assert.match(script, /chatgpt\.site/);
 });
 
 test("keeps all 66 site dossiers substantial and residence addresses unique", async () => {

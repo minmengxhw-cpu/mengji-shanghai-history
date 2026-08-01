@@ -215,18 +215,11 @@ export default function Home() {
         </div>
         <div className="base-list">
           {bases.map((site, index) => (
-            <article
+            <button
+              type="button"
               className="base-entry"
               key={site.id}
               onClick={() => openSite(site)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  openSite(site);
-                }
-              }}
-              role="button"
-              tabIndex={0}
               aria-label={`打开${site.name}完整故事`}
             >
               <span className="base-no">{String(index + 1).padStart(2, "0")}</span>
@@ -234,17 +227,8 @@ export default function Home() {
               {/* GitHub Pages uses verified local archival images without an image proxy. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {site.image && <img src={assetSrc(site.image)} alt={site.imageAlt || site.name} loading="lazy" decoding="async" width="640" height="480" />}
-              <button
-                className="base-open"
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openSite(site);
-                }}
-              >
-                打开完整故事 ↗
-              </button>
-            </article>
+              <span className="base-open">打开完整故事 ↗</span>
+            </button>
           ))}
         </div>
       </section>

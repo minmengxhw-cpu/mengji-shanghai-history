@@ -19,6 +19,9 @@ jobs:
       TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
       TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
       CLOUDBASE_ENV_ID: ${{ secrets.CLOUDBASE_ENV_ID }}
+      # Optional: set repository variable SITE_ORIGIN to the CloudBase public origin
+      # (e.g. https://your-env.tcloudbaseapp.com). Falls back to GitHub Pages canonical.
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://minmengxhw-cpu.github.io/mengji-shanghai-history' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,6 +45,10 @@ jobs:
       - name: Rewrite absolute URLs for root deployment
         run: |
           perl -pi -e 's#https://minmengxhw-cpu\.github\.io/mengji-shanghai-history/?#./#g; s#/mengji-shanghai-history/#/#g;' static-site/*.html
+          if grep -RIn --include='*.html' 'chatgpt\.site' static-site; then
+            echo "snapshot still contains chatgpt.site" >&2
+            exit 1
+          fi
 
       - name: Install CloudBase CLI
         run: npm install @cloudbase/cli

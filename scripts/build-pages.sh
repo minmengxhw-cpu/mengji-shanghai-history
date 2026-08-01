@@ -34,10 +34,15 @@ for asset in favicon.svg og.png og-knowledge.png organization-history.jpg file.s
   if [ -f "dist/client/$asset" ]; then cp "dist/client/$asset" "$output_dir/$asset"; fi
 done
 
+# Prefer SITE_ORIGIN from CI; fall back to the GitHub Pages canonical URL.
+pages_origin="${SITE_ORIGIN:-https://minmengxhw-cpu.github.io/mengji-shanghai-history}"
+pages_origin="${pages_origin%/}"
+
 # GitHub Pages serves this project under /mengji-shanghai-history/.
 # Keep all browser-loaded assets relative so the same snapshot works there.
+# Rewrite any leftover dead preview host to the configured canonical origin.
 perl -pi -e '
-  s#https://mengji-shanghai-history\.minmengxhw\.chatgpt\.site#https://minmengxhw-cpu.github.io/mengji-shanghai-history#g;
+  s#https://mengji-shanghai-history\.minmengxhw\.chatgpt\.site#'"$pages_origin"'#g;
   s#"/assets/#"./assets/#g;
   s#"/sites/#"./sites/#g;
   s#"/sites-optimized/#"./sites-optimized/#g;
@@ -48,6 +53,11 @@ perl -pi -e '
   s#\\"/sites-optimized/#\\"./sites-optimized/#g;
   s#css:/assets/#css:./assets/#g;
 ' "$output_dir/index.html"
+
+if grep -q 'chatgpt\.site' "$output_dir/index.html"; then
+  echo "build-pages: index.html still references chatgpt.site" >&2
+  exit 1
+fi
 # GitHub Pages serves 404.html from arbitrary nested paths. Relative asset
 # references that work at the project root would otherwise resolve one level
 # too deep and leave the fallback page blank.

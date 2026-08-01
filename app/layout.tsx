@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+/** Canonical site origin for metadata (Open Graph, absolute asset URLs). */
+export function resolveSiteOrigin(): string {
+  const fromEnv = process.env.SITE_ORIGIN?.trim().replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  // GitHub Pages is the default public URL when SITE_ORIGIN is unset.
+  return "https://minmengxhw-cpu.github.io/mengji-shanghai-history";
+}
+
 export function generateMetadata(): Metadata {
-  const origin = process.env.GITHUB_PAGES === "true"
-    ? "https://minmengxhw-cpu.github.io/mengji-shanghai-history"
-    : "https://mengji-shanghai-history.minmengxhw.chatgpt.site";
+  const origin = resolveSiteOrigin();
   const description = "收录66处上海民盟历史点位、16处传统教育基地，以及相关人物、事件与完整故事。";
   return {
     metadataBase: new URL(origin),

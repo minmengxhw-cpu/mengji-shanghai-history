@@ -44,3 +44,13 @@ next-env.d.ts
 /outputs/
 /work/
 /research-local/
+
+# trailer: keep source scripts; never commit deps, fonts, or rendered media
+trailer/node_modules/
+trailer/output/
+trailer/bin/
+trailer/fonts/**
+!trailer/fonts/.gitkeep
+*.mp4
+*.wav
+
