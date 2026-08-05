@@ -201,7 +201,7 @@ export default function Home() {
             <div><b>{timeline.length}</b><span>历史节点</span></div>
             <div><b>{routes.length}</b><span>条现场主题线路</span></div>
           </div>
-          <p className="scope-note"><strong>从地址进入历史</strong>　{totalSites}处涵盖传统教育基地、人物纪念与旧居、机关沿革、事件现场、民盟前史、英烈纪念与教育校园。</p>
+          <p className="scope-note"><strong>从地址进入历史</strong>　{totalSites}处涵盖传统教育基地、人物纪念与旧居、机关沿革、事件现场、民盟前史、英烈纪念。</p>
         </div>
       </header>
 
